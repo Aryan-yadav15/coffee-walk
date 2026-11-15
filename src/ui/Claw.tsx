@@ -80,7 +80,12 @@ export function ClawHud() {
 
   const hold = (d: Dir) => ({
     onPointerDown: (e: React.PointerEvent) => {
-      ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+      // keep the hold even if the finger slides off the button
+      try {
+        ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+      } catch {
+        // the pointer was already released
+      }
       claw.dx = d[0]
       claw.dz = d[1]
     },

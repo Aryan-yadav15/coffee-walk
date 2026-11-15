@@ -7,7 +7,7 @@ export const LENGTH = 300
 const STRETCH: [number, number, number][] = [
   [0.2, 0.28, 1.3], // campus
   [0.355, 0.455, 1.4], // the win and the hackathons
-  [0.515, 0.61, 2.2], // the five KhaoGully booths
+  [0.515, 0.61, 2.2], // the five KhaooGully booths
   [0.61, 0.668, 2.6], // the stack, the engine room and the cloud
   [0.668, 0.8, 1.6], // AI lab and more builds
 ]

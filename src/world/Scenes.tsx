@@ -438,7 +438,7 @@ export function Hackers() {
   )
 }
 
-/* ---------- KhaoGully: life between the booths ---------- */
+/* ---------- KhaooGully: life between the booths ---------- */
 
 function ChaiCart({ t }: { t: number }) {
   return (

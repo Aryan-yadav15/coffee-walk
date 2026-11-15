@@ -25,7 +25,7 @@ export const PROJECTS: Project[] = [
     tagline: 'Full-stack developer, designer, founder. Mostly caffeinated.',
     context: 'the person carrying your coffee',
     about:
-      "I build products end to end: the design, the frontend, the backend, the app, and lately the 3D. I started in 2022 wanting one UI component to look right and never really stopped. I'm doing my B.Tech at KIIT, I run KhaoGully, and I like the spot where design and engineering meet: things that look good and are built well under the hood.",
+      "I build products end to end: the design, the frontend, the backend, the app, and lately the 3D. I started in 2022 wanting one UI component to look right and never really stopped. I'm doing my B.Tech at KIIT, I run KhaooGully, and I like the spot where design and engineering meet: things that look good and are built well under the hood.",
     how: [
       'Design first: Figma, Illustrator, Webflow, and a strong opinion about 4px.',
       'Then the stack: React and Next.js up front, FastAPI and Node behind, Postgres and Supabase underneath.',
@@ -34,7 +34,7 @@ export const PROJECTS: Project[] = [
       '3D: Three.js, Blender, Gaussian splatting.',
     ],
     stack: ['TypeScript', 'React', 'Next.js', 'FastAPI', 'Node.js', 'PostgreSQL', 'Supabase', 'React Native', 'Kotlin', 'LangChain', 'Three.js', 'Figma'],
-    highlights: ['Founder, KhaoGully', '1st place, Deloitte hackathon', 'Deloitte internship'],
+    highlights: ['Founder, KhaooGully', '1st place, Deloitte hackathon', 'Deloitte internship'],
     links: [
       { label: 'GitHub', href: GH.slice(0, -1) },
       { label: 'LinkedIn', href: 'https://www.linkedin.com/in/aryanyadav-dev/' },
@@ -155,11 +155,11 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'khaogully',
-    title: 'KhaoGully',
+    title: 'KhaooGully',
     tagline: 'Campus food delivery, pooled.',
     context: 'my startup · live',
     about:
-      'Delivery fees kill small campus orders. KhaoGully pools them: everyone on a campus ordering in the same time window, from any of the participating restaurants, gets delivered together to one hotspot, so the delivery cost is shared. It is live, with real restaurants, real riders and 5,000+ installs across platforms.',
+      'Delivery fees kill small campus orders. KhaooGully pools them: everyone on a campus ordering in the same time window, from any of the participating restaurants, gets delivered together to one hotspot, so the delivery cost is shared. It is live, with real restaurants, real riders and 5,000+ installs across platforms.',
     how: [
       'A pool opens for a campus with a collection window, a delivery slot and a hotspot.',
       'Customers order from any participating restaurant and join the pool.',
@@ -169,13 +169,13 @@ export const PROJECTS: Project[] = [
     ],
     stack: ['React', 'TypeScript', 'FastAPI', 'Supabase', 'PostgreSQL', 'React Native', 'Expo', 'Python'],
     highlights: ['5,000+ installs', '5 products in production', 'Real deliveries, every day'],
-    links: [{ label: 'Open KhaoGully', href: 'https://khaoo-gully-customer-web.vercel.app' }],
+    links: [{ label: 'Open KhaooGully', href: 'https://khaoo-gully-customer-web.vercel.app' }],
   },
   {
     id: 'kg-customer',
-    title: 'KhaoGully · Customer app',
+    title: 'KhaooGully · Customer app',
     tagline: 'Hungry → ordered, in a few taps.',
-    context: 'KhaoGully · 1 of 5',
+    context: 'KhaooGully · 1 of 5',
     about:
       'Where an order starts. Students browse restaurants on their campus, build a cart, join the current pool and check out, with promotional banners and campus email restrictions keeping it local.',
     how: [
@@ -192,9 +192,9 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'kg-restaurant',
-    title: 'KhaoGully · Restaurant dashboard',
+    title: 'KhaooGully · Restaurant dashboard',
     tagline: 'One ping, one tap, pan on.',
-    context: 'KhaoGully · 2 of 5',
+    context: 'KhaooGully · 2 of 5',
     about:
       'Restaurant owners see their pooled orders the moment a pool closes, combined per restaurant or one by one, and accept or decline them. They also get earnings and transaction history, after an admin approves their account.',
     how: [
@@ -204,13 +204,13 @@ export const PROJECTS: Project[] = [
       'Amounts kept in paise with a full breakdown: subtotal, delivery fee, platform fee.',
     ],
     stack: ['React', 'TypeScript', 'Vite', 'FastAPI', 'Supabase', 'Push notifications', 'WhatsApp webhook'],
-    links: [{ label: 'Code', href: GH + 'KhaoGully-restraunt-facing' }],
+    links: [{ label: 'Code', href: GH + 'KhaooGully-restraunt-facing' }],
   },
   {
     id: 'kg-navigator',
-    title: 'KhaoGully · Delivery navigator',
+    title: 'KhaooGully · Delivery navigator',
     tagline: "The rider's app: route, distance, earnings.",
-    context: 'KhaoGully · 3 of 5',
+    context: 'KhaooGully · 3 of 5',
     about:
       'A React Native app for riders. It tracks the delivery live, measures the distance actually travelled, and turns that into earnings per order.',
     how: [
@@ -224,9 +224,9 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'kg-inventory',
-    title: 'KhaoGully · Inventory',
+    title: 'KhaooGully · Inventory',
     tagline: 'Nobody sells biryani they do not have.',
-    context: 'KhaoGully · 4 of 5',
+    context: 'KhaooGully · 4 of 5',
     about:
       'An admin dashboard for stock and sales. Every sale deducts stock automatically, overselling is blocked, and every movement is kept in an audit trail.',
     how: [
@@ -240,20 +240,20 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'kg-economics',
-    title: 'KhaoGully · Economics',
+    title: 'KhaooGully · Economics',
     tagline: 'Does each order actually make money?',
-    context: 'KhaoGully · 5 of 5',
+    context: 'KhaooGully · 5 of 5',
     about:
-      "A business economics dashboard for KhaoGully: what each pooled order brings in once the food, the rider and the platform's cut are accounted for.",
+      "A business economics dashboard for KhaooGully: what each pooled order brings in once the food, the rider and the platform's cut are accounted for.",
     how: ['A single, dependency-free page.', 'Built around the same subtotal / delivery fee / platform fee split the other apps record.'],
     stack: ['HTML', 'CSS', 'JavaScript'],
-    links: [{ label: 'Code', href: GH + 'KhaoGully-economics-dashboard' }],
+    links: [{ label: 'Code', href: GH + 'KhaooGully-economics-dashboard' }],
   },
   {
     id: 'engine',
-    title: 'KhaoGully · Under the hood',
+    title: 'KhaooGully · Under the hood',
     tagline: 'The backend I designed and ran as CTO.',
-    context: 'KhaoGully · engine room',
+    context: 'KhaooGully · engine room',
     about:
       'One FastAPI backend serves the customer app, the restaurant dashboard, the rider navigator, the admin console and a partner API, on Supabase Postgres. Campus orders are pooled so a whole hostel shares one delivery.',
     how: [
@@ -273,7 +273,7 @@ export const PROJECTS: Project[] = [
     id: 'kg-incident',
     title: 'The ₹582 bug',
     tagline: 'Charged, but no order. Found, fixed, and made impossible.',
-    context: 'KhaoGully · incident report',
+    context: 'KhaooGully · incident report',
     about:
       'A customer paid ₹582 for three biryanis. Razorpay captured the money, but no order was ever created, and large carts had been failing like this silently for weeks.',
     how: [

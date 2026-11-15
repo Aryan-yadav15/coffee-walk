@@ -4,8 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Aryan Yadav · walk with me</title>
-    <meta name="description" content="Aryan Yadav's portfolio. Grab a coffee and take a walk through the story: design, KIIT, hackathons, KhaoGully and the side quests." />
+    <meta name="description" content="Aryan Yadav's portfolio. Grab a coffee and take a walk through the story: design, KIIT, hackathons, KhaooGully and the side quests." />
     <meta name="theme-color" content="#ffffff" />
+    <!-- link previews (LinkedIn, WhatsApp, X, Slack) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Aryan Yadav · walk with me" />
+    <meta property="og:description" content="Founder of KhaooGully, full-stack & AI engineer. Grab a coffee and take a 3D walk through what I've built." />
+    <meta property="og:image" content="/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <!-- always render as designed, even when the browser forces dark mode -->
     <meta name="color-scheme" content="only light" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
@@ -14,7 +22,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Caveat:wght@600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- shown until the app loads, then React replaces it -->
+    <div id="root">
+      <div style="position:fixed;inset:0;display:grid;place-content:center;text-align:center;background:#fff;color:#2a2320;font-family:'Bricolage Grotesque',system-ui,sans-serif">
+        <div style="font-size:clamp(40px,9vw,72px);font-weight:800;letter-spacing:-0.05em">Aryan Yadav<span style="color:#ff6b35">.</span></div>
+        <div style="margin-top:8px;font-size:15px;font-weight:600;opacity:0.55">pouring the coffee…</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

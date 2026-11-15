@@ -1,4 +1,4 @@
-// KhaoGully's five products, each acted out on one order: hungry customer → kitchen → rider → stock → margins.
+// KhaooGully's five products, each acted out on one order: hungry customer → kitchen → rider → stock → margins.
 import * as THREE from 'three'
 import { useMemo, useRef, type ReactNode, type RefObject } from 'react'
 import { useFrame } from '@react-three/fiber'

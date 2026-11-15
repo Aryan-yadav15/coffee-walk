@@ -20,7 +20,7 @@ export type MemeId = 'wetcat' | 'iguess'
 
 export const ME = {
   name: 'Aryan Yadav',
-  role: 'Founder, KhaoGully · Full-stack & AI engineer',
+  role: 'Founder, KhaooGully · Full-stack & AI engineer',
   pitch: "I build products end to end, from design to deployment. This portfolio is a short walk: grab a coffee and I'll show you what I've shipped.",
   email: 'aryanyadav.devop@gmail.com',
   linkedin: 'https://www.linkedin.com/in/aryanyadav-dev/',
@@ -44,7 +44,7 @@ export const CHAPTERS = [
   { t: 0.205, label: 'campus' },
   { t: 0.295, label: 'first gig' },
   { t: 0.36, label: 'the win' },
-  { t: 0.455, label: 'KhaoGully' },
+  { t: 0.455, label: 'KhaooGully' },
   { t: 0.61, label: 'engine room' },
   { t: 0.672, label: 'AI lab' },
   { t: 0.772, label: 'more builds' },
@@ -115,16 +115,16 @@ export const BEATS: Beat[] = [
   },
   {
     from: 0.458, to: 0.482, kicker: 'the big one',
-    text: 'Then I stopped building demos and started a company. KhaoGully pools campus food orders, so a whole hostel shares one delivery.',
-    links: [{ label: 'Open KhaoGully', href: 'https://khaoo-gully-customer-web.vercel.app' }],
+    text: 'Then I stopped building demos and started a company. KhaooGully pools campus food orders, so a whole hostel shares one delivery.',
+    links: [{ label: 'Open KhaooGully', href: 'https://khaoo-gully-customer-web.vercel.app' }],
   },
   {
-    from: 0.486, to: 0.512, kicker: 'KhaoGully · real numbers',
+    from: 0.486, to: 0.512, kicker: 'KhaooGully · real numbers',
     text: "It's live. Real restaurants, real riders, real people waiting on real food.",
     stat: { big: '5,000+', small: 'installs across platforms' },
   },
   {
-    from: 0.516, to: 0.536, kicker: 'KhaoGully · follow one order',
+    from: 0.516, to: 0.536, kicker: 'KhaooGully · follow one order',
     text: 'Every order runs through five products I built. Follow that orange parcel.',
     stat: { big: '5', small: 'products in production' },
   },
@@ -163,8 +163,8 @@ export const BEATS: Beat[] = [
   },
   {
     from: eu(ROOM_U - 13), to: eu(ROOM_U - 7.4), kicker: 'engine room',
-    text: "I was KhaoGully's CTO, so let's lift the street and look at what actually runs it. (In a hurry? There's a big skip button.)",
-    stat: { big: 'CTO', small: 'founder · KhaoGully' },
+    text: "I was KhaooGully's CTO, so let's lift the street and look at what actually runs it. (In a hurry? There's a big skip button.)",
+    stat: { big: 'CTO', small: 'founder · KhaooGully' },
   },
   {
     from: eu(ROOM_U - 7), to: eu(ROOM_U - 1.2), kicker: 'engine room · 1 · wire it',

@@ -496,7 +496,7 @@ function WetCat() {
   )
 }
 
-/* ---------- 6 · the city, and KhaoGully ---------- */
+/* ---------- 6 · the city, and KhaooGully ---------- */
 
 const CITY = ['#e9c9a8', '#d9a08b', '#b8c4d9', '#c9b6d6', '#e6d3b3', '#a9c2b5', '#e0b58f']
 
@@ -526,14 +526,14 @@ function City() {
   )
 }
 
-function KhaoGully() {
+function KhaooGully() {
   return (
     <>
       <At t={0.455} face={false}>
         <M g="cyl" c="#3b3b4a" s={[0.22, 5.6, 0.22]} p={[-3.4, 2.8, 0]} />
         <M g="cyl" c="#3b3b4a" s={[0.22, 5.6, 0.22]} p={[3.4, 2.8, 0]} />
         <Exhibit id="khaogully" marker={[0, 6.6, 0]}>
-          <Sign text="KhaoGully" w={6.6} h={1.5} p={[0, 5.2, 0]} r={[0, Math.PI, 0]} bg="#ff6b35" fg="#fff8ec" lit={0.6} back="#3b3b4a" />
+          <Sign text="KhaooGully" w={6.6} h={1.5} p={[0, 5.2, 0]} r={[0, Math.PI, 0]} bg="#ff6b35" fg="#fff8ec" lit={0.6} back="#3b3b4a" />
         </Exhibit>
         <Halo p={[0, 5.2, -0.4]} s={9} />
       </At>
@@ -542,7 +542,7 @@ function KhaoGully() {
   )
 }
 
-/** A KhaoGully rider doing laps of the city road. `dir` -1 rides the other lane, the other way. */
+/** A KhaooGully rider doing laps of the city road. `dir` -1 rides the other lane, the other way. */
 function Scooter({ start = 0, dir = 1 }: { start?: number; dir?: 1 | -1 }) {
   const ref = useRef<THREE.Group>(null!)
   const wheels = useRef<THREE.Group>(null!)
@@ -761,7 +761,7 @@ export function World() {
       <Hackathon />
       <WetCat />
       <City />
-      <KhaoGully />
+      <KhaooGully />
       <Scooter />
       <Scooter start={0.15} dir={-1} />
       <Scooter start={0.29} />

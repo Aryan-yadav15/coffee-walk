@@ -215,7 +215,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes drop { from { opacity: 0; transform: translate(-50%, -14px) rotate(-4deg); } }
 
 /* plain version */
-.plain { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; background: var(--paper); padding: 24px max(20px, calc(50vw - 340px)) 80px; }
+.plain { position: absolute; inset: 0; z-index: 5; overflow-y: auto; overscroll-behavior: contain; background: var(--paper); padding: 24px max(20px, calc(50vw - 340px)) 80px; }
 .plain h1 { font-size: 44px; letter-spacing: -0.04em; margin: 28px 0 0; }
 .plain-lede { font-family: var(--hand); font-size: 24px; margin: 4px 0 20px; }
 .plain h2 { font: 600 12px/1 ui-monospace, Menlo, monospace; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 30px 0 8px; }

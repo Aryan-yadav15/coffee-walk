@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { chaiMode, live } from './state'
+import { chaiMode, live, useStore } from './state'
 import { Hud } from './ui/Hud'
 import { Rig } from './world/Rig'
 import { Ink } from './world/Ink'
@@ -12,6 +12,8 @@ import { LENGTH, TOTAL, dist, tAt } from './world/path'
 const phone = window.matchMedia('(pointer: coarse)').matches
 
 export function App() {
+  // Nothing of the walk shows behind the plain version, so stop drawing it.
+  const plain = useStore((s) => s.plain)
   useEffect(() => {
     const onScroll = () => {
       const max = document.documentElement.scrollHeight - window.innerHeight
@@ -45,6 +47,7 @@ export function App() {
     <>
       <div className={phone ? 'stage' : 'stage tilt'}>
         <Canvas
+          frameloop={plain ? 'never' : 'always'}
           shadows={!phone}
           dpr={[1, phone ? 1.5 : 2]}
           camera={{ fov: 24, near: 1, far: 600, position: [20, 20, 20] }}

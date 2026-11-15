@@ -251,7 +251,7 @@ export function Rig() {
 
     // Close on the two of us at the stall, then pull back into the diorama view as the walk starts.
     const k = smooth(0.003, 0.05, live.t)
-    // Lean in a little at the KhaoGully booths, where the small details are.
+    // Lean in a little at the KhaooGully booths, where the small details are.
     const booths =
       smooth(0.5, 0.52, live.t) * (1 - smooth(0.668, 0.685, live.t)) + smooth(0.69, 0.705, live.t) * (1 - smooth(0.81, 0.825, live.t))
     // In the engine room, pull back and lean a little ahead and left so the room fits,

@@ -1,4 +1,4 @@
-// After the KhaoGully booths: the stack as a claw machine, the street lifting to show the
+// After the KhaooGully booths: the stack as a claw machine, the street lifting to show the
 // engine room underneath (wire an order, survive the lunch rush, the ₹582 bug), and the AWS cloud.
 import * as THREE from 'three'
 import { useMemo, useRef, useState, type RefObject } from 'react'
@@ -295,7 +295,7 @@ function EngineRoom() {
           <M c="#e9e4d4" s={[W - 1, 0.04, 0.16]} p={[0, 0.17, 0]} shadow={false} />
         </group>
       </group>
-      <Sign text={'ENGINE ROOM\n~what actually runs KhaoGully'} w={4.6} h={1.1} p={[-W / 2 + 2.6, 1.1, D / 2 + 0.3]} bg="#2a2320" fg="#fff8ec" lit={0.5} back="#ff6b35" />
+      <Sign text={'ENGINE ROOM\n~what actually runs KhaooGully'} w={4.6} h={1.1} p={[-W / 2 + 2.6, 1.1, D / 2 + 0.3]} bg="#2a2320" fg="#fff8ec" lit={0.5} back="#ff6b35" />
 
       {/* wires */}
       {WIRES.map(([from], i) => (
@@ -314,7 +314,7 @@ function EngineRoom() {
       <group {...node('app')}>
         <Tap onTap={() => connect('app')}>
           <M c="#2a2320" s={[1.2, 2.1, 0.18]} p={[0, 1.25, 0]} r={[-0.15, 0, 0]} />
-          <Sign text={'KhaoGully\n~🍛 order placed'} w={1} h={1.75} p={[0, 1.27, 0.11]} r={[-0.15, 0, 0]} bg="#ff6b35" fg="#fff8ec" lit={0.6} back={false} />
+          <Sign text={'KhaooGully\n~🍛 order placed'} w={1} h={1.75} p={[0, 1.27, 0.11]} r={[-0.15, 0, 0]} bg="#ff6b35" fg="#fff8ec" lit={0.6} back={false} />
           <M c="#5b5466" s={[0.7, 0.2, 0.5]} p={[0, 0.25, -0.1]} />
         </Tap>
         <Sign text="app" w={0.9} h={0.36} p={[0, 0.5, 0.75]} bg="#fff8ec" back="#2a2320" />

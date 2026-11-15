@@ -1,4 +1,4 @@
-// The show-off pieces: the Deloitte win, KhaoGully's numbers, and the AI lab.
+// The show-off pieces: the Deloitte win, KhaooGully's numbers, and the AI lab.
 import * as THREE from 'three'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
@@ -200,7 +200,7 @@ export function MedalWall() {
   )
 }
 
-/* ---------- KhaoGully: the numbers ---------- */
+/* ---------- KhaooGully: the numbers ---------- */
 
 /** Billboard that counts installs up as you walk toward it. */
 export function InstallCounter() {
@@ -220,7 +220,7 @@ export function InstallCounter() {
     g.textAlign = 'left'
     g.fillText('LIVE', 84, 60)
     g.textAlign = 'right'
-    g.fillText('KhaoGully', W - 44, 60)
+    g.fillText('KhaooGully', W - 44, 60)
     g.textAlign = 'center'
     g.fillStyle = '#ff6b35'
     g.font = `800 230px ${FONT}`
@@ -272,7 +272,7 @@ export function PhoneBillboard() {
     g.fillText('9:41', 40, 44)
     g.font = `800 58px ${FONT}`
     g.fillStyle = '#ff6b35'
-    g.fillText('KhaoGully', 40, 132)
+    g.fillText('KhaooGully', 40, 132)
     g.fillStyle = '#7a6f66'
     g.font = `600 24px ${FONT}`
     g.fillText('what are we eating today?', 42, 184)
@@ -343,7 +343,7 @@ export function PhoneBillboard() {
   )
 }
 
-/** Delivery pins over the city, with orders flowing to them from the KhaoGully arch. */
+/** Delivery pins over the city, with orders flowing to them from the KhaooGully arch. */
 export function DeliveryPins() {
   const { pins, arcs } = useMemo(() => {
     const r = rng(55)
