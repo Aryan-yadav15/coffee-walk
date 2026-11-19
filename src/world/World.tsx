@@ -9,7 +9,7 @@ import { KhaoStalls } from './Stalls'
 import { Exhibit } from './Exhibit'
 import { Engine } from './Engine'
 import { Barista, Hackers, Painter, Scanner, Scenes, Team } from './Scenes'
-import { DeliveryPins, InstallCounter, InternshipDoor, MedalWall, NeuralNet, PhoneBillboard, TrophyStage } from './Flex'
+import { DeliveryPins, DeloitteTower, InstallCounter, MedalWall, NeuralNet, PhoneBillboard, TrophyStage } from './Flex'
 import { At, Building, G, Halo, Hit, M, Sign, Tap, glow, mat, night, toon, type V3 } from './kit'
 import { paintedGround } from './paint'
 import { Foliage } from './Foliage'
@@ -766,7 +766,7 @@ export function World() {
       <Scooter start={0.15} dir={-1} />
       <Scooter start={0.29} />
       <TrophyStage><Team /></TrophyStage>
-      <InternshipDoor />
+      <DeloitteTower />
       <MedalWall />
       <InstallCounter />
       <PhoneBillboard />

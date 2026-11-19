@@ -102,3 +102,81 @@ export function glowTexture() {
   g.fillRect(0, 0, 128, 128)
   return (glowTex = new THREE.CanvasTexture(c))
 }
+
+/** Curtain-wall glass for an office tower: blue panes, thin mullions, a slab line every floor. */
+export function glassTextures(cols: number, floors: number, seed: number) {
+  const r = rng(seed)
+  const cw = 24, ch = 40
+  const make = () => {
+    const c = document.createElement('canvas')
+    c.width = cols * cw
+    c.height = floors * ch
+    return c
+  }
+  const a = make(), b = make()
+  const ga = a.getContext('2d')!, gb = b.getContext('2d')!
+  // sky reflected top to bottom, light to deep
+  const sky = ga.createLinearGradient(0, 0, a.width * 0.4, a.height)
+  sky.addColorStop(0, '#a9c8e4')
+  sky.addColorStop(0.5, '#5f86ad')
+  sky.addColorStop(1, '#2f4a68')
+  ga.fillStyle = sky
+  ga.fillRect(0, 0, a.width, a.height)
+  // a diagonal sheen across the glass
+  ga.fillStyle = 'rgba(255,255,255,0.16)'
+  ga.beginPath()
+  ga.moveTo(a.width * 0.15, 0); ga.lineTo(a.width * 0.42, 0); ga.lineTo(a.width * 0.05, a.height * 0.55); ga.lineTo(-a.width * 0.2, a.height * 0.55)
+  ga.fill()
+  gb.fillStyle = '#000'
+  gb.fillRect(0, 0, b.width, b.height)
+  for (let j = 0; j < floors; j++) {
+    ga.fillStyle = '#26303b'
+    ga.fillRect(0, j * ch, a.width, 5) // floor slab
+    for (let i = 0; i < cols; i++) {
+      ga.fillStyle = 'rgba(30,40,52,0.85)'
+      ga.fillRect(i * cw, j * ch, 2, ch) // mullion
+      if (r() < 0.55) {
+        gb.fillStyle = r() < 0.3 ? '#cfe6ff' : '#ffe3a8'
+        gb.fillRect(i * cw + 3, j * ch + 7, cw - 5, ch - 9)
+      }
+    }
+  }
+  const map = new THREE.CanvasTexture(a)
+  const emissiveMap = new THREE.CanvasTexture(b)
+  map.colorSpace = emissiveMap.colorSpace = THREE.SRGBColorSpace
+  map.anisotropy = emissiveMap.anisotropy = 4
+  return { map, emissiveMap }
+}
+
+/** The Deloitte wordmark: "Deloitte" with the green dot, on a plate of `bg`. */
+export function deloitteTexture(bg: string, fg: string) {
+  const c = document.createElement('canvas')
+  c.width = 1024
+  c.height = 256
+  const tex = new THREE.CanvasTexture(c)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 4
+  const draw = () => {
+    const g = c.getContext('2d')!
+    g.fillStyle = bg
+    g.fillRect(0, 0, c.width, c.height)
+    g.font = '700 150px "Helvetica Neue", Helvetica, Arial, sans-serif'
+    g.letterSpacing = '-4px'
+    g.textBaseline = 'alphabetic'
+    const word = 'Deloitte'
+    const tw = g.measureText(word).width
+    const dot = 22
+    const x = (c.width - tw - dot * 2.6) / 2
+    const base = 178
+    g.fillStyle = fg
+    g.fillText(word, x, base)
+    g.fillStyle = '#86bc25'
+    g.beginPath()
+    g.arc(x + tw + dot * 1.5, base - dot, dot, 0, Math.PI * 2)
+    g.fill()
+    tex.needsUpdate = true
+  }
+  draw()
+  redraws.push(draw)
+  return tex
+}

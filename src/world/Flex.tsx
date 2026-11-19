@@ -7,7 +7,8 @@ import { findEgg, live } from '../state'
 import { Exhibit } from './Exhibit'
 import type { ReactNode } from 'react'
 import { blip } from '../sound'
-import { At, G, Halo, Hit, M, Sign, Tap, glow, mat, toon, type V3 } from './kit'
+import { At, G, Halo, Hit, M, Sign, Tap, glow, mat, night, toon, type V3 } from './kit'
+import { deloitteTexture, glassTextures } from './textures'
 import { place, rng, smooth } from './path'
 
 const FONT = '"Bricolage Grotesque", system-ui, sans-serif'
@@ -151,7 +152,8 @@ export function TrophyStage({ children }: { children?: ReactNode }) {
   )
 }
 
-export function InternshipDoor() {
+/** The glowing internship door. Mounted on the Deloitte tower's front. */
+function InternshipDoor() {
   const badge = useRef<THREE.Group>(null!)
   useFrame(({ clock }) => {
     if (!near(0.4)) return
@@ -159,8 +161,7 @@ export function InternshipDoor() {
     badge.current.position.y = 1.9 + Math.sin(clock.elapsedTime * 1.8) * 0.08
   })
   return (
-    <At t={0.4} side={-5.6} turn={0.35}>
-      <Exhibit id="mailmesh" marker={false}>
+    <group>
       <M c="#e9e1cf" s={[3.4, 0.25, 1.6]} p={[0, 0.12, 0.2]} />
       <M c="#2a2320" s={[0.35, 3.7, 0.45]} p={[-1.3, 2.05, 0]} />
       <M c="#2a2320" s={[0.35, 3.7, 0.45]} p={[1.3, 2.05, 0]} />
@@ -172,6 +173,66 @@ export function InternshipDoor() {
       <group ref={badge} position={[0, 1.9, 1.15]}>
         <M c="#2a2320" s={[0.04, 0.6, 0.02]} p={[0, 0.85, 0]} shadow={false} />
         <Sign text={'INTERN\n~Deloitte · Aryan Yadav'} w={1.05} h={0.75} lit={0.5} back="#3ddc97" />
+      </group>
+    </group>
+  )
+}
+
+/** Self-lit material for logos and glass: a little glow by day, more at night. */
+function litMat(params: THREE.MeshToonMaterialParameters, base: number, gain: number) {
+  const m = toon({ emissive: '#ffffff', emissiveIntensity: base, ...params })
+  night.fns.push((n) => (m.emissiveIntensity = base + gain * n))
+  return m
+}
+
+const TOWER = { w: 8, d: 6, h: 14 }
+const glassMat = (() => {
+  const t = glassTextures(8, 11, 77)
+  return litMat({ map: t.map, emissiveMap: t.emissiveMap }, 0, 1.3)
+})()
+const lobbyMat = litMat({ color: '#cfe6f5', emissive: '#fff1cf' }, 0.25, 0.9)
+const logoDark = deloitteTexture('#111111', '#ffffff')
+const logoLight = deloitteTexture('#ffffff', '#111111')
+const logoMat = litMat({ map: logoDark, emissiveMap: logoDark }, 0.5, 0.6)
+const plaqueMat = litMat({ map: logoLight, emissiveMap: logoLight }, 0.35, 0.5)
+const DL_GREEN = '#86bc25'
+
+/** The Deloitte office: a glass tower with the internship door as its entrance, logo up top. */
+export function DeloitteTower() {
+  const { w, d, h } = TOWER
+  return (
+    <At t={0.4} side={-9} turn={0.35}>
+      <Exhibit id="mailmesh" marker={false}>
+      {/* plaza and podium */}
+      <M c="#d8d2c6" s={[w + 4, 0.16, d + 3]} p={[0, 0.08, 1]} />
+      <M c="#3a3f47" s={[w + 0.8, 0.7, d + 0.8]} p={[0, 0.35, 0]} />
+      {/* the glass body, with a lit double-height lobby at its foot */}
+      <mesh geometry={G.box} material={glassMat} scale={[w, h, d]} position={[0, h / 2 + 0.7, 0]} castShadow receiveShadow />
+      <M m={lobbyMat} s={[w - 0.6, 2.6, 0.1]} p={[0, 2, d / 2 + 0.02]} shadow={false} />
+      {/* dark frame: corner columns and a band every few floors */}
+      {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => (
+        <M key={`${sx}${sz}`} c="#1f242b" s={[0.35, h, 0.35]} p={[(sx * w) / 2, h / 2 + 0.7, (sz * d) / 2]} />
+      )))}
+      {[5, 9.5].map((y) => <M key={y} c="#1f242b" s={[w + 0.2, 0.22, d + 0.2]} p={[0, y, 0]} />)}
+      {/* a green fin running up the front corner */}
+      <M m={glow(DL_GREEN, 0.35, 1.2)} s={[0.22, h - 1, 0.22]} p={[w / 2 - 0.5, h / 2 + 1, d / 2 + 0.12]} />
+      {/* crown with the logo */}
+      <M c="#1f242b" s={[w + 0.4, 0.35, d + 0.4]} p={[0, h + 0.88, 0]} />
+      <M c="#111111" s={[w - 0.4, 2.6, d - 1.2]} p={[0, h + 2.35, -0.3]} />
+      <mesh geometry={G.plane} material={logoMat} scale={[w - 0.6, (w - 0.6) / 4, 1]} position={[0, h + 2.35, (d - 1.2) / 2 - 0.3 + 0.06]} />
+      <M g="cyl" c="#c7ccd6" s={[0.08, 2.4, 0.08]} p={[w / 2 - 1.6, h + 4.8, -1]} />
+      <M g="sph" m={glow('#ff4d4d', 0.6, 2)} s={0.22} p={[w / 2 - 1.6, h + 6.05, -1]} shadow={false} />
+      <Halo p={[0, h + 2.4, d / 2]} s={10} />
+      {/* a big lit logo over the entrance, the one you see from the path */}
+      <M c="#111111" s={[6.6, 1.8, 0.3]} p={[0, 5.6, d / 2 + 0.15]} />
+      <mesh geometry={G.plane} material={logoMat} scale={[6.4, 1.6, 1]} position={[0, 5.6, d / 2 + 0.31]} />
+      {/* the way in, and the logo sign out front */}
+      <group position={[-0.6, 0, d / 2 + 0.5]}><InternshipDoor /></group>
+      <group position={[w / 2 - 0.4, 0, d / 2 + 2.4]} rotation={[0, -0.25, 0]}>
+        <M c="#2b2f36" s={[4.6, 0.3, 0.9]} p={[0, 0.15, 0]} />
+        <M c="#ffffff" s={[4.4, 1.5, 0.45]} p={[0, 1.05, 0]} />
+        <mesh geometry={G.plane} material={plaqueMat} scale={[4.2, 1.05, 1]} position={[0, 1.05, 0.235]} />
+        <M m={glow(DL_GREEN, 0.4, 1.2)} s={[4.4, 0.08, 0.47]} p={[0, 0.33, 0]} shadow={false} />
       </group>
       </Exhibit>
     </At>

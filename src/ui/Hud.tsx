@@ -5,6 +5,7 @@ import { ahead, smooth } from '../world/path'
 import { SKIP_TO, STEPS, roomAt } from '../engine'
 import { Tv } from './Tv'
 import { ClawHud } from './Claw'
+import { Plain } from './Plain'
 
 // Scenery comes into view a few steps before you reach it, so the story runs this far ahead.
 const LOOKAHEAD = 6
@@ -50,28 +51,6 @@ function StatSticker({ stat }: { stat: Stat }) {
     <div className="stat">
       <b>{num ? n.toLocaleString('en-US') + num[2] : stat.big}</b>
       <span>{stat.small}</span>
-    </div>
-  )
-}
-
-function Plain() {
-  return (
-    <div className="plain" role="dialog" aria-label="Plain version">
-      <button className="chip" onClick={() => set({ plain: false })}>← back to the walk</button>
-      <h1>{ME.name}</h1>
-      <p className="plain-lede">The same story, without the walking.</p>
-      {BEATS.map((b, i) => (
-        <section key={i}>
-          {(i === 0 || BEATS[i - 1].kicker !== b.kicker) && <h2>{b.kicker}</h2>}
-          {b.stat && <p className="plain-stat"><b>{b.stat.big}</b> {b.stat.small}</p>}
-          <p>{b.text}{b.meme ? ` (${MEMES[b.meme].bottom}.)` : ''}</p>
-          {b.links && (
-            <p className="links">
-              {b.links.map((l) => <a key={l.href} className="chip" href={l.href} target="_blank" rel="noreferrer">{l.label}</a>)}
-            </p>
-          )}
-        </section>
-      ))}
     </div>
   )
 }
