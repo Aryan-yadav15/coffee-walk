@@ -4,24 +4,24 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { findEgg, live } from '../state'
 import { blip } from '../sound'
-import { At, G, Hit, M, Sign, Tap, glow, mat, type V3 } from './kit'
+import { At, G, Hit, M, Rod, Sign, Tap, capsule, glow, mat, torus, type V3 } from './kit'
 import { useScreen } from './Flex'
 import { Exhibit, Near } from './Exhibit'
-import { Booth, Npc, Puffs, type NpcParts } from './Stalls'
+import { Booth, Npc, Puffs, type HairStyle, type Look, type NpcParts } from './Stalls'
 import { dist, place, rng, tAt } from './path'
 
 const FONT = '"Bricolage Grotesque", system-ui, sans-serif'
 const MONO = 'ui-monospace, "SF Mono", Menlo, monospace'
 const near = (t: number, r = 0.05) => Math.abs(live.t - t) < r
 
-type Look = Parameters<typeof Npc>[0]['look']
 const r6 = rng(99)
 const TOPS = ['#5b8def', '#e8833a', '#3d8f7a', '#d9534f', '#8a5fb5', '#f5c23e', '#f7f3ea', '#3d5a80', '#f08b7d']
 const LEGS = ['#2f3a55', '#39425e', '#2f2a33', '#5b6b8c', '#6a4a3a']
-const HAIRS = ['#231c1e', '#3a2a22', '#5a3a28', '#231c1e', '#8a5a3c']
+const HAIRS = ['#2e2326', '#3a2a22', '#5a3a28', '#2e2326', '#8a5a3c']
 const SKINS = ['#e8b08a', '#c98a5e', '#a86b45', '#f0c29b']
 const pick = <T,>(a: T[]) => a[Math.floor(r6() * a.length)]
-const randomLook = (): Look => ({ top: pick(TOPS), legs: pick(LEGS), hair: pick(HAIRS), skin: pick(SKINS) })
+const STYLES: HairStyle[] = ['short', 'swept', 'bun', 'long', 'curly']
+const randomLook = (): Look => ({ top: pick(TOPS), legs: pick(LEGS), hair: pick(HAIRS), skin: pick(SKINS), style: pick(STYLES) })
 
 /** Swing the legs and arms for one walking step. */
 function stride(n: NpcParts, phase: number, amount = 1) {
@@ -78,8 +78,10 @@ function Walker({ from, to, side, speed = 1.1, start = 0, look, dog }: WalkerPro
             <M c="#c98a5e" s={[0.05, 0.05, 0.26]} p={[0, 0.05, -0.1]} r={[0.6, 0, 0]} />
           </group>
           {[[-0.1, 0.2], [0.1, 0.2], [-0.1, -0.2], [0.1, -0.2]].map(([x, z]) => (
-            <M key={`${x}${z}`} c="#a86b45" s={[0.08, 0.3, 0.08]} p={[x, 0.15, z]} />
+            <M key={`${x}${z}`} geo={capsule(0.04, 0.22)} c="#a86b45" p={[x, 0.15, z]} />
           ))}
+          <M g="sph" c="#8a5a3c" s={[0.1, 0.18, 0.06]} p={[-0.13, 0.76, 0.27]} />
+          {[0.07, -0.07].map((x) => <M key={x} g="sph" c="#2a2320" s={0.045} p={[x, 0.72, 0.44]} shadow={false} />)}
         </group>
       )}
     </Near>
@@ -147,11 +149,12 @@ export function Barista() {
     <Npc
       look={{ top: '#2a2320', legs: '#2f2a33', hair: '#231c1e', skin: SKINS[1], hat: 'cap', hatColor: '#e8833a', apron: '#e8833a' }}
       p={[-0.2, 0, -1.05]}
-      armL={[-1.1, 0, -0.2]}
-      armR={[-0.6, 0, 0.2]}
+      armL={[-0.45, 0, -0.2]}
+      armR={[-0.3, 0, 0.15]}
       anim={(n, time) => {
         const pour = (time % 5) / 5
-        n.armL.rotation.x = -1.1 - Math.sin(pour * Math.PI) * 0.4
+        n.elbowL.rotation.x = -1.0 - Math.sin(pour * Math.PI) * 0.5
+        n.elbowR.rotation.x = -0.9
         n.head.rotation.x = 0.25
         n.head.rotation.y = Math.sin(time * 0.6) * 0.3
       }}
@@ -482,6 +485,38 @@ function PickupPoint({ t }: { t: number }) {
   )
 }
 
+const BIKE: Record<string, V3> = {
+  rear: [0, 0.3, -0.45], front: [0, 0.3, 0.45], bb: [0, 0.3, -0.02], seat: [0, 0.8, -0.15], head: [0, 0.78, 0.3], fork: [0, 0.62, 0.34],
+}
+
+/** A bicycle on its kickstand. Faces +z. */
+function Bike({ c }: { c: string }) {
+  const { rear, front, bb, seat, head, fork } = BIKE
+  return (
+    <group rotation={[0, 0, 0.07]}>
+      {[rear, front].map((w) => (
+        <group key={w[2]} position={w} rotation={[0, Math.PI / 2, 0]}>
+          <M geo={torus(0.26, 0.035)} c="#2a2320" />
+          <M g="cyl" c="#c7ccd6" s={[0.08, 0.06, 0.08]} r={[Math.PI / 2, 0, 0]} shadow={false} />
+          {[0, Math.PI / 3, -Math.PI / 3].map((a) => <M key={a} c="#c7ccd6" s={[0.015, 0.5, 0.015]} r={[0, 0, a]} shadow={false} />)}
+        </group>
+      ))}
+      <Rod a={bb} b={seat} r={0.03} c={c} />
+      <Rod a={seat} b={head} r={0.03} c={c} />
+      <Rod a={bb} b={fork} r={0.032} c={c} />
+      <Rod a={bb} b={rear} r={0.022} c={c} />
+      <Rod a={seat} b={rear} r={0.022} c={c} />
+      <Rod a={fork} b={front} r={0.025} c="#3b3b4a" />
+      <Rod a={head} b={[0, 0.92, 0.28]} r={0.025} c="#3b3b4a" />
+      <M c="#3b3b4a" s={[0.46, 0.04, 0.04]} p={[0, 0.92, 0.28]} />
+      {[-0.22, 0.22].map((x) => <M key={x} c="#2a2320" s={[0.08, 0.06, 0.06]} p={[x, 0.92, 0.28]} shadow={false} />)}
+      <M c="#2a2320" s={[0.13, 0.05, 0.26]} p={[0, 0.85, -0.18]} />
+      <M g="cyl" c="#3b3b4a" s={[0.1, 0.03, 0.1]} p={[0.05, 0.3, -0.02]} r={[0, 0, Math.PI / 2]} />
+      <Rod a={bb} b={[0.14, 0.01, -0.18]} r={0.015} c="#3b3b4a" />
+    </group>
+  )
+}
+
 function Bikes({ t }: { t: number }) {
   return (
     <Near t={t}>
@@ -489,12 +524,9 @@ function Bikes({ t }: { t: number }) {
         <M g="cup" c="#c9735a" s={[0.9, 0.7, 0.9]} p={[-0.7, 0.35, 0]} />
         <M g="ico" c="#6fae5c" s={[1.3, 1.4, 1.3]} p={[-0.7, 1.2, 0]} />
         <M g="ico" c="#86c06a" s={[0.9, 1, 0.9]} p={[-0.45, 1.75, 0.2]} />
-        {[0.3, 0.9].map((x, i) => (
+        {[0.35, 1.0].map((x, i) => (
           <group key={x} position={[x, 0, 0]} rotation={[0, 0.15 * i, 0]}>
-            {[-0.35, 0.35].map((z) => <M key={z} g="cyl" c="#2a2320" s={[0.55, 0.05, 0.55]} p={[0, 0.3, z]} r={[0, 0, Math.PI / 2]} />)}
-            <M c={i ? '#5b8def' : '#f5c23e'} s={[0.05, 0.05, 0.75]} p={[0, 0.5, 0]} r={[0.2, 0, 0]} />
-            <M c="#2a2320" s={[0.2, 0.05, 0.12]} p={[0, 0.68, -0.25]} />
-            <M c="#2a2320" s={[0.4, 0.04, 0.04]} p={[0, 0.72, 0.32]} />
+            <Bike c={i ? '#5b8def' : '#f5c23e'} />
           </group>
         ))}
       </At>
@@ -533,7 +565,7 @@ function DocRagScene() {
   }, [g, tex])
   const pages = useRef<THREE.Group>(null!)
   const from = useMemo(() => new THREE.Vector3(-1.1, 1.6, -1), [])
-  const to = useMemo(() => new THREE.Vector3(0.35, 1.3, -0.45), [])
+  const to = useMemo(() => new THREE.Vector3(0.5, 1.3, -0.25), [])
   useFrame(({ clock }) => {
     if (!near(0.714)) return
     pages.current.children.forEach((p, i) => {
@@ -568,25 +600,28 @@ function DocRagScene() {
           </group>
         ))}
       </group>
-      {/* desk, monitor, dev */}
-      <M c="#efe9dc" s={[1.5, 0.07, 0.7]} p={[0.3, 0.78, -0.3]} />
-      {[[-0.38, -0.58], [0.98, -0.58], [-0.38, -0.02], [0.98, -0.02]].map(([x, z]) => <M key={`${x}${z}`} c="#3b3b4a" s={[0.06, 0.75, 0.06]} p={[x, 0.38, z]} />)}
-      <M c="#3b3b4a" s={[0.08, 0.3, 0.08]} p={[0.45, 0.96, -0.5]} />
-      <group position={[0.45, 1.36, -0.48]} rotation={[0, -0.4, 0]}>
+      {/* desk side-on: the dev sits in profile, the screen turned out toward the path */}
+      <M c="#efe9dc" s={[0.7, 0.07, 1.4]} p={[0.35, 0.78, -0.2]} />
+      {[[0.05, -0.85], [0.65, -0.85], [0.05, 0.45], [0.65, 0.45]].map(([x, z]) => <M key={`${x}${z}`} c="#3b3b4a" s={[0.06, 0.75, 0.06]} p={[x, 0.38, z]} />)}
+      <M c="#3b3b4a" s={[0.28, 0.03, 0.24]} p={[0.5, 0.83, -0.25]} />
+      <M c="#3b3b4a" s={[0.08, 0.3, 0.08]} p={[0.5, 0.96, -0.25]} />
+      <group position={[0.52, 1.36, -0.25]} rotation={[0, -0.97, 0]}>
         <M c="#1f1a1c" s={[1.02, 0.68, 0.05]} />
         <mesh geometry={G.plane} material={material} scale={[0.94, 0.6, 1]} position={[0, 0, 0.028]} />
       </group>
-      <M c="#8a5fb5" s={[0.5, 0.08, 0.5]} p={[-0.45, 0.5, 0.35]} />
+      <M c="#8a5fb5" s={[0.5, 0.08, 0.5]} p={[-0.5, 0.5, -0.2]} />
+      <M g="cyl" c="#3b3b4a" s={[0.08, 0.45, 0.08]} p={[-0.5, 0.24, -0.2]} />
       <Npc
-        look={{ top: '#3d8f7a', legs: '#2f3a55', hair: '#231c1e', skin: SKINS[1] }}
-        p={[-0.45, 0, 0.37]}
-        r={Math.PI - 0.7}
+        look={{ top: '#3d8f7a', legs: '#2f3a55', hair: '#2e2326', skin: SKINS[1], style: 'curly' }}
+        p={[-0.5, 0, -0.18]}
+        r={Math.PI / 2}
         sit
         armL={[-1.3, 0, -0.2]}
         armR={[-1.3, 0, 0.2]}
         anim={(n, time) => {
           n.armL.rotation.x = -1.3 + Math.max(0, Math.sin(time * 9)) * 0.08
           n.armR.rotation.x = -1.3 + Math.max(0, Math.sin(time * 9 + 2)) * 0.08
+          n.head.rotation.y = -0.3
         }}
       />
     </>

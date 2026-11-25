@@ -3,9 +3,10 @@ import * as THREE from 'three'
 import { useMemo, useRef, type ReactNode, type RefObject } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { live } from '../state'
-import { At, G, Halo, M, Sign, capsule, glow, mat, type V3 } from './kit'
+import { At, G, Halo, M, Sign, capsule, glow, mat, shade, torus, type V3 } from './kit'
 import { Beam, useScreen } from './Flex'
 import { place, rng } from './path'
+import { puffTexture } from './textures'
 import { Exhibit, Near } from './Exhibit'
 
 const FONT = '"Bricolage Grotesque", system-ui, sans-serif'
@@ -19,49 +20,105 @@ export const SIDE = -5.6
 /* ---------- people ---------- */
 
 export type NpcParts = {
-  root: THREE.Group; body: THREE.Group; head: THREE.Group; eyes: THREE.Group
-  armL: THREE.Group; armR: THREE.Group; legL: THREE.Group; legR: THREE.Group; kneeL: THREE.Group; kneeR: THREE.Group
+  root: THREE.Group; body: THREE.Group; head: THREE.Group; eyes: THREE.Group; mouth: THREE.Mesh
+  armL: THREE.Group; armR: THREE.Group; elbowL: THREE.Group; elbowR: THREE.Group
+  legL: THREE.Group; legR: THREE.Group; kneeL: THREE.Group; kneeR: THREE.Group
 }
-type Look = { top: string; legs: string; hair: string; skin?: string; hat?: 'chef' | 'helmet' | 'cap'; hatColor?: string; apron?: string }
+export type HairStyle = 'short' | 'swept' | 'bun' | 'long' | 'curly'
+export type Look = {
+  top: string; legs: string; hair: string; skin?: string
+  hat?: 'chef' | 'helmet' | 'cap' | 'beanie'; hatColor?: string; apron?: string
+  /** Hair shape: from the camera, the top of the head is most of what you see. */
+  style?: HairStyle
+  /** Hem and cuffs. Defaults to a darker shade of `top`. */
+  trim?: string
+  hood?: boolean; pocket?: boolean; bag?: string
+}
 type NpcProps = {
   look: Look
   p?: V3
   r?: number
   sit?: boolean
+  scale?: number
   armL?: V3
   armR?: V3
+  /** Held in the left / right hand; the hand is at the origin. */
+  holdL?: ReactNode
+  holdR?: ReactNode
   /** Runs every frame after the idle breathing and blinking. */
-  anim?: (n: NpcParts, time: number) => void
+  anim?: (n: NpcParts, time: number, dt: number) => void
   children?: ReactNode
 }
 
+const EYE_X = 0.105
+const shines = new Map<string, string>()
+/** Hair shine: the hair colour pulled toward a cool grey-blue, so it never turns pink. */
+const shine = (c: string) => {
+  let s = shines.get(c)
+  if (!s) shines.set(c, (s = '#' + new THREE.Color(c).lerp(new THREE.Color('#aab4c8'), 0.4).getHexString()))
+  return s
+}
+
+/** Hair on top of the head dome: a few shapes that break up the outline, and a shine. */
+function Hair({ c, style = 'short' }: { c: string; style?: HairStyle }) {
+  return (
+    <>
+      <M g="dome" c={c} s={[0.6, 0.58, 0.6]} p={[0, 0.26, -0.02]} r={[-0.22, 0, 0]} />
+      {style === 'swept' && (
+        <>
+          <M g="sph" c={c} s={[0.3, 0.11, 0.2]} p={[0.07, 0.45, 0.19]} r={[0.55, 0, -0.3]} />
+          <M g="sph" c={c} s={[0.24, 0.1, 0.17]} p={[-0.1, 0.44, 0.2]} r={[0.55, 0, 0.3]} />
+          <M g="sph" c={c} s={[0.12, 0.1, 0.16]} p={[-0.03, 0.55, -0.12]} r={[-0.5, 0, 0]} />
+        </>
+      )}
+      {style === 'bun' && <M g="sph" c={c} s={0.22} p={[0, 0.57, -0.13]} />}
+      {style === 'long' && <M g="sph" c={c} s={[0.58, 0.5, 0.3]} p={[0, 0.17, -0.13]} />}
+      {style === 'curly' &&
+        [0, 1, 2, 3, 4, 5].map((i) => {
+          const a = (i / 6) * Math.PI * 2
+          return <M key={i} g="sph" c={c} s={0.17} p={[Math.sin(a) * 0.2, 0.46, Math.cos(a) * 0.17 - 0.04]} />
+        })}
+      {/* two short light streaks on top, so dark hair is not a flat disc from above */}
+      {[[0.08, -0.35], [-0.06, 0.3]].map(([x, rz]) => (
+        <M key={x} g="sph" c={shine(c)} s={[0.15, 0.035, 0.06]} p={[x, 0.52, 0.06]} r={[0.4, 0, rz]} shadow={false} />
+      ))}
+    </>
+  )
+}
+
 /**
- * A townsperson in the same rounded style as the two of us. Faces +z.
- * armL is the arm on +x (their left), armR on -x.
+ * A person in the rounded style the whole walk uses. Faces +z.
+ * armL is the arm on +x (their left), armR on -x. Elbows and knees bend.
  */
-export function Npc({ look, p, r = 0, sit, armL = [0, 0, 0.1], armR = [0, 0, -0.1], anim, children }: NpcProps) {
+export function Npc({ look, p, r = 0, sit, scale = 1.2, armL = [0, 0, 0.1], armR = [0, 0, -0.1], holdL, holdR, anim, children }: NpcProps) {
   const root = useRef<THREE.Group>(null!)
   const body = useRef<THREE.Group>(null!)
   const head = useRef<THREE.Group>(null!)
   const eyes = useRef<THREE.Group>(null!)
+  const mouth = useRef<THREE.Mesh>(null!)
   const aL = useRef<THREE.Group>(null!)
   const aR = useRef<THREE.Group>(null!)
+  const eL = useRef<THREE.Group>(null!)
+  const eR = useRef<THREE.Group>(null!)
   const legL = useRef<THREE.Group>(null!)
   const legR = useRef<THREE.Group>(null!)
   const kneeL = useRef<THREE.Group>(null!)
   const kneeR = useRef<THREE.Group>(null!)
   const seed = useMemo(() => Math.random() * 10, [])
   const skin = look.skin ?? SKINS[0]
+  const trim = look.trim ?? shade(look.top, -0.07)
   const base = sit ? -0.12 : 0
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, dt) => {
     const time = clock.elapsedTime + seed
     body.current.position.y = base + Math.sin(time * 2) * 0.01
     eyes.current.scale.y = time % 3.7 < 0.12 ? 0.1 : 1
     anim?.(
-      { root: root.current, body: body.current, head: head.current, eyes: eyes.current, armL: aL.current, armR: aR.current,
+      { root: root.current, body: body.current, head: head.current, eyes: eyes.current, mouth: mouth.current,
+        armL: aL.current, armR: aR.current, elbowL: eL.current, elbowR: eR.current,
         legL: legL.current, legR: legR.current, kneeL: kneeL.current, kneeR: kneeR.current },
       time,
+      Math.min(dt, 0.05),
     )
   })
 
@@ -70,26 +127,51 @@ export function Npc({ look, p, r = 0, sit, armL = [0, 0, 0.1], armR = [0, 0, -0.
       <M geo={capsule(0.1, 0.14)} c={look.legs} p={[0, -0.17, 0]} />
       <group ref={knee} position={[0, -0.33, 0]} rotation={[sit ? Math.PI / 2 : 0, 0, 0]}>
         <M geo={capsule(0.095, 0.12)} c={look.legs} p={[0, -0.13, 0]} />
-        <M c="#f7f3ea" s={[0.22, 0.14, 0.36]} p={[0, -0.27, 0.06]} />
+        <M c="#f7f3ea" s={[0.22, 0.12, 0.34]} p={[0, -0.26, 0.06]} />
+        <M c="#b8ab98" s={[0.235, 0.05, 0.37]} p={[0, -0.315, 0.065]} />
       </group>
     </group>
   )
-  const arm = (ref: RefObject<THREE.Group>, x: number, rot: V3) => (
+  const arm = (ref: RefObject<THREE.Group>, elbow: RefObject<THREE.Group>, x: number, rot: V3, hold: ReactNode) => (
     <group ref={ref} position={[x, 1.32, 0]} rotation={rot}>
-      <M geo={capsule(0.085, 0.32)} c={look.top} p={[0, -0.22, 0]} />
-      <M g="sph" c={skin} s={0.17} p={[0, -0.49, 0]} />
+      <M geo={capsule(0.085, 0.12)} c={look.top} p={[0, -0.12, 0]} />
+      <group ref={elbow} position={[0, -0.25, 0]}>
+        <M geo={capsule(0.08, 0.1)} c={look.top} p={[0, -0.1, 0]} />
+        <M g="cyl" c={trim} s={[0.19, 0.07, 0.19]} p={[0, -0.19, 0]} />
+        <M g="sph" c={skin} s={0.17} p={[0, -0.25, 0]} />
+        <group position={[0, -0.25, 0]}>{hold}</group>
+      </group>
     </group>
   )
 
   return (
-    <group ref={root} position={p} rotation={[0, r, 0]} scale={1.2}>
+    <group ref={root} position={p} rotation={[0, r, 0]} scale={scale}>
       <group ref={body}>
         {leg(legL, kneeL, 0.13)}
         {leg(legR, kneeR, -0.13)}
         <M geo={capsule(0.29, 0.3)} c={look.top} p={[0, 1.02, 0]} s={[1, 1, 0.82]} />
+        <M g="cyl" c={trim} s={[0.6, 0.09, 0.5]} p={[0, 0.8, 0]} />
         {look.apron && <M c={look.apron} s={[0.46, 0.52, 0.06]} p={[0, 0.94, 0.22]} />}
-        {arm(aL, 0.36, armL)}
-        {arm(aR, -0.36, armR)}
+        {look.hood && (
+          <>
+            <M g="sph" c={trim} s={[0.44, 0.24, 0.3]} p={[0, 1.4, -0.14]} />
+            {[0.06, -0.06].map((x) => <M key={x} geo={capsule(0.013, 0.12)} c="#fff8ec" p={[x, 1.29, 0.225]} shadow={false} />)}
+          </>
+        )}
+        {look.pocket && <M c={trim} s={[0.3, 0.16, 0.06]} p={[0, 0.93, 0.23]} />}
+        {look.bag && (
+          <>
+            <M c={look.bag} s={[0.4, 0.46, 0.2]} p={[0, 1.06, -0.3]} />
+            {[0.13, -0.13].map((x) => (
+              <group key={x}>
+                <M c={shade(look.bag!, -0.1)} s={[0.06, 0.42, 0.03]} p={[x, 1.13, 0.245]} shadow={false} />
+                <M c={shade(look.bag!, -0.1)} s={[0.06, 0.04, 0.5]} p={[x, 1.44, 0]} shadow={false} />
+              </group>
+            ))}
+          </>
+        )}
+        {arm(aL, eL, 0.36, armL, holdL)}
+        {arm(aR, eR, -0.36, armR, holdR)}
         <group ref={head} position={[0, 1.5, 0]}>
           <M g="sph" c={skin} s={[0.54, 0.52, 0.52]} p={[0, 0.27, 0]} />
           {look.hat === 'helmet' ? (
@@ -97,8 +179,14 @@ export function Npc({ look, p, r = 0, sit, armL = [0, 0, 0.1], armR = [0, 0, -0.
               <M g="dome" c={look.hatColor ?? '#ff6b35'} s={[0.66, 0.64, 0.66]} p={[0, 0.25, -0.02]} r={[-0.12, 0, 0]} />
               <M c="#2a2320" s={[0.46, 0.1, 0.06]} p={[0, 0.42, 0.29]} r={[-0.3, 0, 0]} shadow={false} />
             </>
+          ) : look.hat === 'beanie' ? (
+            <>
+              <M g="dome" c={look.hatColor ?? '#f5c23e'} s={[0.62, 0.6, 0.62]} p={[0, 0.26, -0.02]} r={[-0.22, 0, 0]} />
+              <M geo={torus(0.29, 0.05)} c={shade(look.hatColor ?? '#f5c23e', -0.08)} p={[0, 0.25, 0]} r={[Math.PI / 2 - 0.22, 0, 0]} />
+              <M g="sph" c="#fff8ec" s={0.16} p={[0, 0.6, -0.08]} />
+            </>
           ) : (
-            <M g="dome" c={look.hair} s={[0.6, 0.58, 0.6]} p={[0, 0.26, -0.02]} r={[-0.22, 0, 0]} />
+            <Hair c={look.hair} style={look.hat ? 'short' : look.style} />
           )}
           {look.hat === 'chef' && (
             <>
@@ -114,18 +202,19 @@ export function Npc({ look, p, r = 0, sit, armL = [0, 0, 0.1], armR = [0, 0, -0.
               <M c={look.hatColor ?? '#3d5a80'} s={[0.4, 0.04, 0.26]} p={[0, 0.47, 0.3]} />
             </>
           )}
-          <group ref={eyes} position={[0, 0.26, 0.24]}>
-            {[0.11, -0.11].map((x) => (
+          {/* eyes sit mostly inside the face, so they do not stick out past the head when it turns */}
+          <group ref={eyes} position={[0, 0.26, 0.232]}>
+            {[EYE_X, -EYE_X].map((x) => (
               <group key={x} position={[x, 0, 0]}>
-              <M g="sph" c="#ffffff" s={[0.13, 0.16, 0.06]} shadow={false} />
-              <M g="sph" c="#231c1e" s={[0.075, 0.095, 0.05]} p={[0, -0.012, 0.022]} shadow={false} />
-              <M g="sph" c="#ffffff" s={0.032} p={[0.02, 0.022, 0.048]} shadow={false} />
+                <M g="sph" c="#ffffff" s={[0.13, 0.16, 0.05]} shadow={false} />
+                <M g="sph" c="#231c1e" s={[0.075, 0.095, 0.04]} p={[0, -0.012, 0.02]} shadow={false} />
+                <M g="sph" c="#ffffff" s={0.03} p={[0.02, 0.022, 0.038]} shadow={false} />
               </group>
             ))}
           </group>
           <M g="sph" c="#f0907a" s={[0.1, 0.06, 0.03]} p={[0.18, 0.17, 0.21]} shadow={false} />
           <M g="sph" c="#f0907a" s={[0.1, 0.06, 0.03]} p={[-0.18, 0.17, 0.21]} shadow={false} />
-          <M g="sph" c="#8a4034" s={[0.09, 0.022, 0.03]} p={[0, 0.14, 0.255]} shadow={false} />
+          <mesh ref={mouth} geometry={G.sph} material={mat('#8a4034')} position={[0, 0.14, 0.255]} scale={[0.09, 0.022, 0.03]} />
         </group>
         {children}
       </group>
@@ -136,18 +225,41 @@ export function Npc({ look, p, r = 0, sit, armL = [0, 0, 0.1], armR = [0, 0, -0.
 /** Soft puffs drifting up, for steam. */
 export function Puffs({ p, n = 4, size = 0.14 }: { p: V3; n?: number; size?: number }) {
   const ref = useRef<THREE.Group>(null!)
-  const m = useMemo(() => new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.55, depthWrite: false }), [])
+  const m = useMemo(() => new THREE.SpriteMaterial({ map: puffTexture(), transparent: true, opacity: 0.8, depthWrite: false }), [])
   useFrame(({ clock }) => {
     ref.current.children.forEach((c, i) => {
       const k = (clock.elapsedTime * 0.5 + i / n) % 1
       c.position.set(Math.sin(k * 5 + i * 2) * 0.1, k * 0.9, Math.cos(i * 3) * 0.05)
-      c.scale.setScalar(size * (0.4 + k) * Math.sin(k * Math.PI) * 2)
+      c.scale.setScalar(size * (0.4 + k) * Math.sin(k * Math.PI) * 3.2)
     })
   })
   return (
     <group ref={ref} position={p}>
-      {Array.from({ length: n }, (_, i) => <mesh key={i} geometry={G.sph} material={m} />)}
+      {Array.from({ length: n }, (_, i) => <sprite key={i} material={m} />)}
     </group>
+  )
+}
+
+/** Scooter bodywork, shared by the riders on the road and the one parked at the delivery booth. Faces +z. */
+export function ScooterBody() {
+  return (
+    <>
+      <M c="#ff6b35" s={[0.4, 0.3, 1.5]} p={[0, 0.45, 0]} />
+      <M c="#2a2320" s={[0.36, 0.06, 0.7]} p={[0, 0.62, 0.15]} />
+      <M c="#ff6b35" s={[0.36, 0.7, 0.14]} p={[0, 0.85, 0.66]} r={[-0.25, 0, 0]} />
+      <M c="#ff6b35" s={[0.3, 0.08, 0.5]} p={[0, 0.52, 0.72]} r={[0.35, 0, 0]} />
+      <M c="#2a2320" s={[0.38, 0.12, 0.62]} p={[0, 0.68, -0.32]} />
+      <M c="#2f2a33" s={[0.8, 0.06, 0.06]} p={[0, 1.22, 0.58]} />
+      {[-0.4, 0.4].map((x) => (
+        <group key={x}>
+          <M c="#2a2320" s={[0.1, 0.08, 0.08]} p={[x, 1.22, 0.58]} shadow={false} />
+          <M g="cyl" c="#2f2a33" s={[0.02, 0.22, 0.02]} p={[x * 0.75, 1.33, 0.56]} shadow={false} />
+          <M g="sph" c="#c7ccd6" s={[0.1, 0.07, 0.03]} p={[x * 0.75, 1.45, 0.56]} shadow={false} />
+        </group>
+      ))}
+      <M g="sph" m={glow('#fff3c4', 0.6, 2)} s={0.16} p={[0, 1.02, 0.78]} shadow={false} />
+      <M m={glow('#ff4d3d', 0.5, 1.5)} s={[0.2, 0.06, 0.04]} p={[0, 0.52, -0.76]} shadow={false} />
+    </>
   )
 }
 
@@ -311,6 +423,7 @@ function KitchenScene() {
       <M g="cyl" c="#2f2a33" s={[0.66, 0.04, 0.66]} p={[-0.55, 1.02, 0.4]} />
       <M g="cyl" m={glow('#ff6b35', 0.9, 1.5)} s={[0.5, 0.02, 0.5]} p={[-0.55, 1.04, 0.4]} shadow={false} />
       <M g="cyl" c="#2f2a33" s={[0.6, 0.1, 0.6]} p={[-0.55, 1.1, 0.4]} />
+      <M geo={torus(0.3, 0.03)} c="#3b3b4a" p={[-0.55, 1.16, 0.4]} r={[Math.PI / 2, 0, 0]} />
       <M c="#2f2a33" s={[0.5, 0.05, 0.08]} p={[-1.08, 1.13, 0.4]} />
       <group ref={food} position={[-0.55, 1.12, 0.4]}>
         {['#f5c23e', '#e8833a', '#fff3c4', '#d9534f', '#f5c23e', '#8fc468'].map((c, i) => (
@@ -450,18 +563,16 @@ function RiderScene() {
           <M key={i} m={glow('#3ddc97', 1.2, 0.8)} s={[w, h, 0.04]} p={[x, y, 0]} shadow={false} />
         ))}
       </group>
-      <Beam from={[-0.75, 1.65, 0.6]} to={[0.25, 1.9, -0.85]} r={0.55} />
+      <Beam from={[-0.55, 1.42, 0.72]} to={[0.25, 1.9, -0.85]} r={0.3} />
       {/* parked scooter */}
       <group position={[0.75, 0, 0.35]} rotation={[0, -Math.PI / 2 + 0.3, 0]}>
-        <M g="cyl" c="#1f1a1c" s={[0.5, 0.14, 0.5]} p={[0, 0.25, 0.62]} r={[0, 0, Math.PI / 2]} />
-        <M g="cyl" c="#1f1a1c" s={[0.5, 0.14, 0.5]} p={[0, 0.25, -0.62]} r={[0, 0, Math.PI / 2]} />
-        <M g="cyl" c="#c7ccd6" s={[0.26, 0.16, 0.26]} p={[0, 0.25, 0.62]} r={[0, 0, Math.PI / 2]} shadow={false} />
-        <M g="cyl" c="#c7ccd6" s={[0.26, 0.16, 0.26]} p={[0, 0.25, -0.62]} r={[0, 0, Math.PI / 2]} shadow={false} />
-        <M c="#ff6b35" s={[0.42, 0.3, 1.35]} p={[0, 0.45, 0]} />
-        <M c="#2a2320" s={[0.4, 0.1, 0.6]} p={[0, 0.66, -0.2]} />
-        <M c="#ff6b35" s={[0.38, 0.75, 0.16]} p={[0, 0.82, 0.58]} r={[-0.25, 0, 0]} />
-        <M c="#2f2a33" s={[0.8, 0.06, 0.06]} p={[0, 1.2, 0.52]} />
-        <M g="sph" m={glow('#fff3c4', 0.6, 2)} s={0.16} p={[0, 1.02, 0.72]} shadow={false} />
+        {[0.62, -0.62].map((z) => (
+          <group key={z} position={[0, 0.25, z]}>
+            <M geo={torus(0.19, 0.07)} c="#1f1a1c" r={[0, Math.PI / 2, 0]} />
+            <M g="cyl" c="#c7ccd6" s={[0.2, 0.12, 0.2]} r={[0, 0, Math.PI / 2]} shadow={false} />
+          </group>
+        ))}
+        <ScooterBody />
         <M c="#2a2320" s={[0.62, 0.62, 0.62]} p={[0, 1.02, -0.55]} />
         <Sign text="KG" w={0.5} h={0.5} p={[0.32, 1.02, -0.55]} r={[0, Math.PI / 2, 0]} bg="#ff6b35" fg="#fff8ec" back={false} />
         <Sign text="KG" w={0.5} h={0.5} p={[-0.32, 1.02, -0.55]} r={[0, -Math.PI / 2, 0]} bg="#ff6b35" fg="#fff8ec" back={false} />
@@ -645,33 +756,44 @@ function EconomicsScene() {
   })
   return (
     <>
-      {/* desk, monitor, chair */}
-      <M c="#efe9dc" s={[1.6, 0.07, 0.75]} p={[-0.55, 0.78, -0.55]} />
-      {[[-1.28, -0.85], [0.18, -0.85], [-1.28, -0.25], [0.18, -0.25]].map(([x, z]) => (
+      {/* desk side-on: the analyst sits in profile, the screen turned out toward the path */}
+      <M c="#efe9dc" s={[0.75, 0.07, 1.5]} p={[-0.3, 0.78, -0.4]} />
+      {[[-0.62, -1.08], [0.02, -1.08], [-0.62, 0.28], [0.02, 0.28]].map(([x, z]) => (
         <M key={`${x}${z}`} c="#3b3b4a" s={[0.06, 0.75, 0.06]} p={[x, 0.38, z]} />
       ))}
-      <M c="#3b3b4a" s={[0.08, 0.3, 0.08]} p={[-0.1, 0.96, -0.75]} />
-      <group position={[-0.1, 1.38, -0.72]} rotation={[0, -0.45, 0]}>
+      <M c="#3b3b4a" s={[0.28, 0.03, 0.24]} p={[-0.12, 0.83, -0.5]} />
+      <M c="#3b3b4a" s={[0.08, 0.3, 0.08]} p={[-0.12, 0.96, -0.5]} />
+      <group position={[-0.1, 1.38, -0.5]} rotation={[0, -0.97, 0]}>
         <M c="#1f1a1c" s={[1.02, 0.66, 0.05]} />
         <mesh geometry={G.plane} material={material} scale={[0.94, 0.58, 1]} position={[0, 0, 0.028]} />
       </group>
-      <M c="#3b3b4a" s={[0.5, 0.03, 0.16]} p={[-0.85, 0.83, -0.35]} />
-      <M g="cup" c="#fdf6ea" s={[0.12, 0.15, 0.12]} p={[0.05, 0.89, -0.4]} />
-      <Puffs p={[0.05, 0.98, -0.4]} n={3} size={0.05} />
-      <M c="#8a5fb5" s={[0.52, 0.08, 0.5]} p={[-1.15, 0.5, 0.1]} />
-      <M c="#8a5fb5" s={[0.52, 0.55, 0.07]} p={[-1.15, 0.82, 0.37]} />
-      <M g="cyl" c="#3b3b4a" s={[0.08, 0.45, 0.08]} p={[-1.15, 0.24, 0.1]} />
+      <M c="#3b3b4a" s={[0.16, 0.03, 0.5]} p={[-0.52, 0.83, -0.45]} />
+      <M g="cup" c="#fdf6ea" s={[0.12, 0.15, 0.12]} p={[-0.35, 0.89, 0.1]} />
+      <Puffs p={[-0.35, 0.98, 0.1]} n={3} size={0.05} />
+      {/* office chair on a five-spoke base */}
+      <M c="#8a5fb5" s={[0.5, 0.08, 0.52]} p={[-1.2, 0.5, -0.45]} />
+      <M c="#8a5fb5" s={[0.07, 0.55, 0.5]} p={[-1.47, 0.82, -0.45]} />
+      <M g="cyl" c="#3b3b4a" s={[0.08, 0.4, 0.08]} p={[-1.2, 0.26, -0.45]} />
+      {[0, 1, 2, 3, 4].map((i) => {
+        const a = (i / 5) * Math.PI * 2
+        return (
+          <group key={i} position={[-1.2, 0.06, -0.45]} rotation={[0, a, 0]}>
+            <M c="#3b3b4a" s={[0.05, 0.04, 0.3]} p={[0, 0, 0.15]} />
+            <M g="sph" c="#2a2320" s={0.07} p={[0, -0.02, 0.28]} />
+          </group>
+        )
+      })}
       <Npc
-        look={{ top: '#8a5fb5', legs: '#2f3a55', hair: '#3a2a22', skin: SKINS[1] }}
-        p={[-1.15, 0, 0.12]}
-        r={Math.PI - 0.55}
+        look={{ top: '#8a5fb5', legs: '#2f3a55', hair: '#3a2a22', skin: SKINS[1], style: 'bun' }}
+        p={[-1.2, 0, -0.43]}
+        r={Math.PI / 2}
         sit
         armL={[-1.3, 0, -0.2]}
         armR={[-1.3, 0, 0.2]}
         anim={(n, time) => {
           n.armL.rotation.x = -1.3 + Math.max(0, Math.sin(time * 9)) * 0.08
           n.armR.rotation.x = -1.3 + Math.max(0, Math.sin(time * 9 + 2)) * 0.08
-          n.head.rotation.y = Math.sin(time * 0.5) * 0.12
+          n.head.rotation.y = -0.35 + Math.sin(time * 0.5) * 0.12
         }}
       />
       {/* the numbers, as objects */}

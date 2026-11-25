@@ -103,6 +103,22 @@ export function glowTexture() {
   return (glowTex = new THREE.CanvasTexture(c))
 }
 
+let puffTex: THREE.CanvasTexture | null = null
+/** A soft white blob with no hard edge, for steam. */
+export function puffTexture() {
+  if (puffTex) return puffTex
+  const c = document.createElement('canvas')
+  c.width = c.height = 64
+  const g = c.getContext('2d')!
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+  grad.addColorStop(0, 'rgba(255,255,255,0.9)')
+  grad.addColorStop(0.5, 'rgba(255,255,255,0.4)')
+  grad.addColorStop(1, 'rgba(255,255,255,0)')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 64, 64)
+  return (puffTex = new THREE.CanvasTexture(c))
+}
+
 /** Curtain-wall glass for an office tower: blue panes, thin mullions, a slab line every floor. */
 export function glassTextures(cols: number, floors: number, seed: number) {
   const r = rng(seed)

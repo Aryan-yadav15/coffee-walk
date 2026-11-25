@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { BEATS, CHAPTERS, HIGHLIGHTS, ME, MEMES, type MemeId, type Stat } from '../story'
-import { EGGS, EGG_TOTAL, get, jumpTo, live, say, set, useStore } from '../state'
-import { ahead, smooth } from '../world/path'
+import { EGGS, EGG_TOTAL, findEgg, get, jumpTo, live, say, set, useStore } from '../state'
+import { ahead, dist, smooth } from '../world/path'
 import { SKIP_TO, STEPS, roomAt } from '../engine'
 import { Tv } from './Tv'
+import { Inspect } from './Inspect'
 import { ClawHud } from './Claw'
 import { Plain } from './Plain'
 
@@ -11,6 +12,16 @@ import { Plain } from './Plain'
 const LOOKAHEAD = 6
 /** How far into the walk (in `t`) the hero frame has fully opened. */
 const HERO_END = 0.02
+
+/** Scrolling faster than this (world units a second) for a moment means nobody is reading. */
+const TOO_FAST = 35
+const ZOOMIES = [
+  'slow down, the coffee is spilling ☕',
+  "speedrun any%? the captions aren't going anywhere.",
+  'bro skipped the lore 💀',
+  "you're scrolling faster than my API during the lunch rush.",
+  'there will be a quiz at the end. (there will not.)',
+]
 
 function Meme({ id }: { id: MemeId }) {
   const m = MEMES[id]
@@ -22,6 +33,8 @@ function Meme({ id }: { id: MemeId }) {
           {m.top && <span className="meme-top">{m.top}</span>}
           <span className="meme-emoji">{m.emoji}</span>
         </div>
+      ) : m.file.endsWith('.mp4') ? (
+        <video src={`${import.meta.env.BASE_URL}memes/${m.file}`} aria-label={m.bottom} autoPlay loop muted playsInline onError={() => setMissing(true)} />
       ) : (
         <img src={`${import.meta.env.BASE_URL}memes/${m.file}`} alt={m.bottom} onError={() => setMissing(true)} />
       )}
@@ -75,6 +88,8 @@ export function Hud() {
   useEffect(() => {
     let raf = 0
     let lastMove = performance.now(), lastT = 0, nudged = false, hinted = false
+    // how fast the visitor is scrolling, smoothed, and how long they have kept it up
+    let prevD = dist(live.target), prevNow = performance.now(), pace = 0, fastFor = 0, lastJoke = -1e9, jokes = 0
     const tick = () => {
       const t = live.t
       const at = ahead(t, LOOKAHEAD)
@@ -110,6 +125,21 @@ export function Hud() {
 
       const now = performance.now()
       if (Math.abs(t - lastT) > 0.0005 || get().claw) (lastMove = now), (lastT = t)
+
+      // Scrolling like the walk is a loading screen? Call it out, gently, now and then.
+      const d = dist(live.target), dt = Math.max(1, now - prevNow) / 1000
+      pace += (Math.abs(d - prevD) / dt - pace) * Math.min(1, dt / 0.3)
+      ;(prevD = d), (prevNow = now)
+      const ours = now < live.jumping || get().claw || get().tv !== null || t < HERO_END || t > 0.97
+      fastFor = !ours && pace > TOO_FAST ? fastFor + dt : 0
+      if (fastFor > 0.8 && now - lastJoke > 20000) {
+        lastJoke = now
+        fastFor = 0
+        if (jokes++ === 0) {
+          set({ meme: 'toofast' })
+          findEgg('speedrun', 'are you even reading atp? 🏎️')
+        } else say(ZOOMIES[(jokes - 2) % ZOOMIES.length])
+      }
       if (!hinted && t > 0.03) {
         hinted = true
         say('psst: see a little 📺? tap that stall to see what I built.')
@@ -235,6 +265,7 @@ export function Hud() {
         </div>
       )}
 
+      <Inspect />
       <Tv />
       {plain && <Plain />}
     </div>

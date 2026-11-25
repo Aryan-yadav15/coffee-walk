@@ -8,9 +8,11 @@ import { blip } from '../sound'
 import { KhaoStalls } from './Stalls'
 import { Exhibit } from './Exhibit'
 import { Engine } from './Engine'
+import { ROOM_U, eu } from '../engine'
 import { Barista, Hackers, Painter, Scanner, Scenes, Team } from './Scenes'
 import { DeliveryPins, DeloitteTower, InstallCounter, MedalWall, NeuralNet, PhoneBillboard, TrophyStage } from './Flex'
-import { At, Building, G, Halo, Hit, M, Sign, Tap, glow, mat, night, toon, type V3 } from './kit'
+import { At, Building, G, Halo, Hit, M, Sign, Tap, glow, mat, night, toon, torus, type V3 } from './kit'
+import { Npc, ScooterBody } from './Stalls'
 import { paintedGround } from './paint'
 import { Foliage } from './Foliage'
 import { TOTAL, dist, place, rng, smooth, tAt } from './path'
@@ -185,9 +187,12 @@ function Meadow() {
 function Lamp() {
   return (
     <group>
+      <M g="cyl" c="#3b3b4a" s={[0.3, 0.3, 0.3]} p={[0, 0.15, 0]} />
       <M g="cyl" c="#3b3b4a" s={[0.1, 3.6, 0.1]} p={[0, 1.8, 0]} />
+      <M g="cyl" c="#3b3b4a" s={[0.16, 0.12, 0.16]} p={[0, 3.55, 0]} />
       <M c="#3b3b4a" s={[0.08, 0.08, 0.8]} p={[0, 3.6, 0.35]} />
-      <M g="sph" m={glow('#ffd89a', 0.2, 2.6)} s={0.32} p={[0, 3.5, 0.7]} shadow={false} />
+      <M g="cone" c="#3b3b4a" s={[0.56, 0.3, 0.56]} p={[0, 3.62, 0.7]} />
+      <M g="sph" m={glow('#ffd89a', 0.2, 2.6)} s={0.28} p={[0, 3.46, 0.7]} shadow={false} />
       <Halo p={[0, 3.5, 0.7]} s={3.4} />
     </group>
   )
@@ -220,7 +225,10 @@ function Awning({ w, c, p }: { w: number; c: string; p: V3 }) {
   return (
     <group position={p} rotation={[0.28, 0, 0]}>
       {Array.from({ length: n }, (_, i) => (
-        <M key={i} c={i % 2 ? '#fff8ec' : c} s={[w / n, 0.08, 1.5]} p={[(i + 0.5) * (w / n) - w / 2, 0, 0]} />
+        <group key={i} position={[(i + 0.5) * (w / n) - w / 2, 0, 0]}>
+          <M c={i % 2 ? '#fff8ec' : c} s={[w / n, 0.08, 1.5]} />
+          <M g="half" c={i % 2 ? '#fff8ec' : c} s={[w / n, 0.05, w / n]} p={[0, -0.03, 0.75]} r={[Math.PI / 2 - 0.28, 0, 0]} />
+        </group>
       ))}
     </group>
   )
@@ -235,24 +243,43 @@ function CoffeeStall() {
         <Exhibit id="about" marker={[1.9, 3.2, 0.4]}>
         <Barista />
         <M c="#c9483f" s={[2.8, 1, 1.3]} p={[0, 0.65, 0]} />
+        {[-0.9, 0, 0.9].map((x) => <M key={x} c="#b23d35" s={[0.78, 0.62, 0.05]} p={[x, 0.66, 0.66]} />)}
+        <M c="#6a4a3a" s={[2.9, 0.08, 1.38]} p={[0, 1.13, 0]} />
         <M c="#f3e3c3" s={[3, 0.1, 1.5]} p={[0, 1.2, 0]} />
+        {/* espresso machine */}
+        <group position={[0.05, 1.25, -0.25]}>
+          <M c="#c7ccd6" s={[0.75, 0.55, 0.45]} p={[0, 0.28, 0]} />
+          <M c="#2f2a33" s={[0.78, 0.07, 0.48]} p={[0, 0.58, 0]} />
+          <M c="#c9483f" s={[0.76, 0.08, 0.47]} p={[0, 0.42, 0]} shadow={false} />
+          {[-0.17, 0.17].map((x) => <M key={x} g="cyl" c="#2f2a33" s={[0.13, 0.1, 0.13]} p={[x, 0.2, 0.25]} />)}
+          <M c="#9aa0ad" s={[0.6, 0.04, 0.2]} p={[0, 0.03, 0.3]} />
+          <M g="cyl" c="#9aa0ad" s={[0.03, 0.25, 0.03]} p={[0.33, 0.15, 0.25]} r={[0, 0, 0.2]} shadow={false} />
+        </group>
         <M g="cyl" c="#2f2a33" s={[0.5, 0.12, 0.5]} p={[-1, 0.25, 0.7]} r={[Math.PI / 2, 0, 0]} />
         <M g="cyl" c="#2f2a33" s={[0.5, 0.12, 0.5]} p={[1, 0.25, 0.7]} r={[Math.PI / 2, 0, 0]} />
-        <M c="#6a4a3a" s={[0.08, 1.6, 0.08]} p={[-1.4, 2, 0.6]} />
-        <M c="#6a4a3a" s={[0.08, 1.6, 0.08]} p={[1.4, 2, 0.6]} />
-        <Awning w={3.2} c="#e8833a" p={[0, 2.75, 0.5]} />
-        <Sign text={'COFFEE\n~and chai, if you know where to tap'} w={2.6} h={0.8} p={[0, 3.45, 0.2]} bg="#2a2320" fg="#ffe9c7" />
+        {/* awning set high, so the barista's face shows under it */}
+        <M c="#6a4a3a" s={[0.08, 2.1, 0.08]} p={[-1.4, 2.25, 0.6]} />
+        <M c="#6a4a3a" s={[0.08, 2.1, 0.08]} p={[1.4, 2.25, 0.6]} />
+        <Awning w={3.2} c="#e8833a" p={[0, 3.25, 0.35]} />
+        <Sign text={'COFFEE\n~and chai, if you know where to tap'} w={2.6} h={0.8} p={[0, 3.95, 0.05]} bg="#2a2320" fg="#ffe9c7" />
         {/* the kettle: tap it */}
         <Tap onTap={chaiMode} position={[0.85, 1.25, 0.2]}>
           <Hit s={0.9} p={[0, 0.25, 0]} />
           <M g="cup" c="#c7ccd6" s={[0.42, 0.4, 0.42]} p={[0, 0.2, 0]} r={[Math.PI, 0, 0]} />
           <M g="cone" c="#c7ccd6" s={[0.1, 0.36, 0.1]} p={[0.28, 0.25, 0]} r={[0, 0, -1]} />
           <M g="sph" c="#2f2a33" s={0.1} p={[0, 0.44, 0]} />
+          <M geo={torus(0.13, 0.022, Math.PI)} c="#2f2a33" p={[0, 0.36, 0]} />
         </Tap>
-        {[-0.9, -0.6, -0.3].map((x) => (
-          <M key={x} g="cup" c="#fdf6ea" s={[0.16, 0.22, 0.16]} p={[x, 1.36, 0.3]} />
+        {[-0.95, -0.7, -0.45].map((x) => (
+          <group key={x} position={[x, 1.36, 0.35]}>
+            <M g="cup" c="#fdf6ea" s={[0.16, 0.22, 0.16]} />
+            <M g="cyl" c="#9a6a43" s={[0.155, 0.08, 0.155]} p={[0, -0.01, 0]} shadow={false} />
+            <M g="cyl" c="#3a2a22" s={[0.175, 0.03, 0.175]} p={[0, 0.12, 0]} />
+          </group>
         ))}
-        <M g="sph" m={glow('#ffd89a', 0.3, 2)} s={0.2} p={[0, 2.5, 0.5]} shadow={false} />
+        <M g="cyl" c="#2a2320" s={[0.015, 0.4, 0.015]} p={[0, 2.95, 0.4]} shadow={false} />
+        <M g="cone" c="#2a2320" s={[0.36, 0.2, 0.36]} p={[0, 2.72, 0.4]} />
+        <M g="sph" m={glow('#ffd89a', 0.3, 2)} s={0.18} p={[0, 2.6, 0.4]} shadow={false} />
         </Exhibit>
       </At>
       <At t={0.03} side={2.7} turn={0.7}>
@@ -366,7 +393,7 @@ function Campus() {
         <M c="#f3e3c3" s={[1.3, 0.3, 1.3]} p={[-3.2, 5.1, 0]} />
         <M c="#f3e3c3" s={[1.3, 0.3, 1.3]} p={[3.2, 5.1, 0]} />
         <M c="#a85a44" s={[7.4, 1.1, 0.6]} p={[0, 4.3, 0]} />
-        <Sign text="KIIT" w={3} h={0.85} p={[0, 4.3, 0.32]} r={[0, Math.PI, 0]} bg="#f3e3c3" back={false} />
+        <Sign text="KIIT" w={3} h={0.85} p={[0, 4.3, -0.32]} r={[0, Math.PI, 0]} bg="#f3e3c3" back={false} />
       </At>
       <At t={0.222} side={-14} turn={0.15}><Building w={11} h={7.5} d={6} c="#d98a6f" roof="#8f4f3f" /></At>
       <At t={0.25} side={-27} turn={0.15}><Building w={12} h={11} d={6} c="#e6c9a0" roof="#8f4f3f" /></At>
@@ -409,7 +436,8 @@ function Laptop({ p, r = 0 }: { p: V3; r?: number }) {
   return (
     <group position={p} rotation={[0, r, 0]}>
       <M c="#c7ccd6" s={[0.42, 0.03, 0.3]} />
-      <M m={glow('#9fd8ff', 0.7, 1.2)} s={[0.42, 0.28, 0.02]} p={[0, 0.15, -0.16]} r={[-0.2, 0, 0]} shadow={false} />
+      <M c="#3b3b4a" s={[0.44, 0.3, 0.02]} p={[0, 0.15, -0.175]} r={[-0.2, 0, 0]} />
+      <M m={glow('#9fd8ff', 0.7, 1.2)} s={[0.4, 0.26, 0.01]} p={[0, 0.15, -0.16]} r={[-0.2, 0, 0]} shadow={false} />
     </group>
   )
 }
@@ -423,6 +451,15 @@ function Hackathon() {
         <M key={`${x}${z}`} g="cyl" c="#f7f3ea" s={[0.12, 3, 0.12]} p={[x, 1.5, z]} />
       ))}
       <M c="#f7f3ea" s={[4.9, 0.08, 0.08]} p={[0, 3, -1.8]} />
+      {[-2.4, 2.4].map((x) => <M key={x} g="cyl" c="#f7f3ea" s={[0.12, 3.6, 0.12]} p={[x, 1.8, 0.3]} />)}
+      <group position={[0, 3.32, -0.82]} rotation={[-0.26, 0, 0]}>
+        {Array.from({ length: 10 }, (_, i) => (
+          <group key={i} position={[-2.34 + i * 0.52, 0, 0]}>
+            <M c={i % 2 ? '#fff8ec' : '#1f2440'} s={[0.52, 0.07, 2.34]} />
+            <M g="half" c={i % 2 ? '#fff8ec' : '#1f2440'} s={[0.52, 0.05, 0.52]} p={[0, -0.03, 1.16]} r={[Math.PI / 2 + 0.26, 0, 0]} />
+          </group>
+        ))}
+      </group>
       <Sign text={'HACKATHON\n~sleep is a deprecated feature'} w={4.4} h={1} p={[0, 2.45, -1.8]} bg="#1f2440" fg="#ffe9c7" />
       {[-1.8, -0.6, 0.6, 1.8].map((x, i) => (
         <M key={x} g="cone" c={['#ff6b35', '#f5c23e', '#5b8def', '#3ddc97'][i]} s={[0.5, 0.5, 0.06]} p={[x, 2.75, 1.8]} r={[Math.PI, 0, 0]} />
@@ -437,8 +474,9 @@ function Hackathon() {
       {[-1.1, 1.1].map((x) => (
         <group key={x} position={[x, 0, 0]}>
           <M c="#e6d3b3" s={[1.7, 0.08, 0.9]} p={[0, 0.8, 0]} />
-          <M c="#6a4a3a" s={[0.08, 0.8, 0.08]} p={[-0.75, 0.4, 0]} />
-          <M c="#6a4a3a" s={[0.08, 0.8, 0.08]} p={[0.75, 0.4, 0]} />
+          {[[-0.75, -0.35], [0.75, -0.35], [-0.75, 0.35], [0.75, 0.35]].map(([x, z]) => (
+            <M key={`${x}${z}`} c="#6a4a3a" s={[0.07, 0.8, 0.07]} p={[x, 0.4, z]} />
+          ))}
           <Laptop p={[-0.35, 0.86, 0]} r={Math.PI + 0.2} />
           <Laptop p={[0.4, 0.86, 0.05]} r={Math.PI - 0.3} />
           <M g="cyl" c="#3ddc97" s={[0.07, 0.16, 0.07]} p={[0, 0.92, 0.25]} />
@@ -456,7 +494,7 @@ function WetCat() {
   const rain = useRef<THREE.Group>(null!)
   const cat = useRef<THREE.Group>(null!)
   useFrame(({ clock }) => {
-    rain.current.children.forEach((d, i) => (d.position.y = 1.25 - ((clock.elapsedTime * 1.6 + i * 0.37) % 1) * 1.1))
+    rain.current.children.forEach((d, i) => (d.position.y = 1.5 - ((clock.elapsedTime * 1.6 + i * 0.37) % 1) * 1.35))
     cat.current.rotation.z = Math.sin(clock.elapsedTime * 22) * 0.012 // shivering
   })
   return (
@@ -470,22 +508,24 @@ function WetCat() {
       >
         <Hit s={1.6} p={[0, 0.5, 0]} />
         <M g="cyl" c="#7fb7d9" s={[1.5, 0.03, 1.2]} p={[0, 0.045, 0]} shadow={false} />
-        <group ref={cat}>
-          <M c="#7d828c" s={[0.34, 0.4, 0.3]} p={[0, 0.25, 0]} />
-          <M c="#7d828c" s={[0.36, 0.3, 0.3]} p={[0, 0.6, 0.04]} />
-          <M g="cone" c="#7d828c" s={[0.12, 0.16, 0.1]} p={[-0.12, 0.8, 0.04]} r={[0, 0, 0.5]} />
-          <M g="cone" c="#7d828c" s={[0.12, 0.16, 0.1]} p={[0.12, 0.8, 0.04]} r={[0, 0, -0.5]} />
+        <group ref={cat} scale={1.45}>
+          <M g="sph" c="#7d828c" s={[0.38, 0.44, 0.36]} p={[0, 0.23, 0]} />
+          <M g="sph" c="#7d828c" s={[0.4, 0.33, 0.34]} p={[0, 0.58, 0.04]} />
+          <M g="cone" c="#7d828c" s={[0.12, 0.17, 0.1]} p={[-0.12, 0.78, 0.04]} r={[0, 0, 0.5]} />
+          <M g="cone" c="#7d828c" s={[0.12, 0.17, 0.1]} p={[0.12, 0.78, 0.04]} r={[0, 0, -0.5]} />
+          {[-0.09, 0.09].map((x) => <M key={x} g="sph" c="#8d929c" s={[0.11, 0.08, 0.14]} p={[x, 0.04, 0.15]} />)}
           {/* huge, betrayed eyes */}
           <M g="sph" c="#f4efe6" s={[0.12, 0.13, 0.04]} p={[-0.09, 0.63, 0.19]} shadow={false} />
           <M g="sph" c="#f4efe6" s={[0.12, 0.13, 0.04]} p={[0.09, 0.63, 0.19]} shadow={false} />
           <M g="sph" c="#1f1a1c" s={[0.06, 0.07, 0.03]} p={[-0.09, 0.62, 0.21]} shadow={false} />
           <M g="sph" c="#1f1a1c" s={[0.06, 0.07, 0.03]} p={[0.09, 0.62, 0.21]} shadow={false} />
           <M c="#5c6069" s={[0.08, 0.02, 0.02]} p={[0, 0.52, 0.2]} shadow={false} />
-          <M c="#7d828c" s={[0.07, 0.07, 0.4]} p={[0.16, 0.1, -0.3]} r={[0, 0.5, 0]} />
+          <M geo={torus(0.15, 0.035, Math.PI * 1.2)} c="#7d828c" p={[0.12, 0.12, -0.2]} r={[0, 1.1, -0.6]} />
         </group>
         {/* a personal rain cloud */}
-        <M g="ico" c="#6b7280" s={[0.8, 0.35, 0.5]} p={[0, 1.5, 0]} />
-        <M g="ico" c="#7b8290" s={[0.5, 0.3, 0.4]} p={[0.3, 1.6, 0.05]} />
+        <M g="sph" c="#6b7280" s={[0.95, 0.42, 0.6]} p={[0, 1.75, 0]} />
+        <M g="sph" c="#7b8290" s={[0.6, 0.4, 0.5]} p={[0.32, 1.88, 0.05]} />
+        <M g="sph" c="#7b8290" s={[0.5, 0.34, 0.44]} p={[-0.34, 1.82, 0.02]} />
         <group ref={rain}>
           {Array.from({ length: 7 }, (_, i) => (
             <M key={i} c="#9fd8ff" s={[0.015, 0.09, 0.015]} p={[Math.sin(i * 2.4) * 0.28, 1, Math.cos(i * 1.7) * 0.16]} shadow={false} />
@@ -507,7 +547,9 @@ function City() {
     for (let d = dist(0.462); d < dist(0.91); d += 7.05) {
       const t = tAt(d)
       const pick = () => CITY[Math.floor(r() * CITY.length)]
-      out.push({ t, side: -(14.5 + r() * 2.5), w: 6.2, h: 6 + r() * 9, d: 7, c: pick() })
+      // the engine room is deep, so the row behind it steps back to make room
+      const room = Math.abs(d - dist(eu(ROOM_U))) < 14 ? 6.5 : 0
+      out.push({ t, side: -(14.5 + room + r() * 2.5), w: 6.2, h: 6 + r() * 9, d: 7, c: pick() })
       out.push({ t: t + 0.006, side: 16.5 + r() * 2, w: 5.6, h: 2.8 + r() * 1.6, d: 5, c: pick() })
       out.push({ t: t + 0.01, side: -(25 + r() * 6), w: 8, h: 14 + r() * 16, d: 8, c: pick() })
     }
@@ -565,17 +607,16 @@ function Scooter({ start = 0, dir = 1 }: { start?: number; dir?: 1 | -1 }) {
       >
         <Hit s={2.6} p={[0, 0.9, 0]} />
         <group ref={wheels}>
-          <M g="cyl" c="#1f1a1c" s={[0.5, 0.14, 0.5]} p={[0, 0.25, 0.7]} r={[0, 0, Math.PI / 2]} />
-          <M g="cyl" c="#1f1a1c" s={[0.5, 0.14, 0.5]} p={[0, 0.25, -0.7]} r={[0, 0, Math.PI / 2]} />
+          {[0.7, -0.7].map((z) => (
+            <group key={z} position={[0, 0.25, z]}>
+              <M geo={torus(0.19, 0.07)} c="#1f1a1c" r={[0, Math.PI / 2, 0]} />
+              <M g="cyl" c="#c7ccd6" s={[0.2, 0.12, 0.2]} r={[0, 0, Math.PI / 2]} shadow={false} />
+            </group>
+          ))}
         </group>
-        <M c="#ff6b35" s={[0.4, 0.3, 1.5]} p={[0, 0.45, 0]} />
-        <M c="#ff6b35" s={[0.36, 0.7, 0.14]} p={[0, 0.85, 0.66]} r={[-0.25, 0, 0]} />
-        <M c="#2f2a33" s={[0.8, 0.06, 0.06]} p={[0, 1.22, 0.58]} />
-        <M g="sph" m={glow('#fff3c4', 0.6, 2)} s={0.16} p={[0, 1.02, 0.78]} shadow={false} />
-        {/* rider */}
-        <M c="#3d5a80" s={[0.42, 0.6, 0.3]} p={[0, 1.05, -0.05]} />
-        <M c="#e0a47a" s={[0.28, 0.28, 0.28]} p={[0, 1.52, -0.02]} />
-        <M g="sph" c="#f5c23e" s={[0.36, 0.26, 0.36]} p={[0, 1.62, -0.03]} />
+        <ScooterBody />
+        <Npc look={{ top: '#3d5a80', legs: '#2f2a33', hair: '#2e2326', skin: '#c98a5e', hat: 'helmet', hatColor: '#f5c23e' }}
+          p={[0, 0.2, -0.22]} sit scale={1} armL={[-1.15, 0, -0.15]} armR={[-1.15, 0, 0.15]} />
         {/* delivery box */}
         <M c="#2a2320" s={[0.6, 0.6, 0.6]} p={[0, 0.95, -0.62]} />
         <Sign text="KG" w={0.5} h={0.5} p={[0.31, 0.95, -0.62]} r={[0, Math.PI / 2, 0]} bg="#ff6b35" fg="#fff8ec" back={false} />
@@ -616,7 +657,7 @@ function Splat() {
         <M g="cyl" c="#f7f3ea" s={[2.2, 0.5, 2.2]} p={[0, 0.25, 0]} />
         <M g="cyl" c="#3b3b4a" s={[1.6, 0.3, 1.6]} p={[0, 0.65, 0]} />
         <points ref={pts} geometry={geo} position={[0, 3, 0]}>
-          <pointsMaterial size={0.04} vertexColors transparent opacity={0.9} depthWrite={false} />
+          <pointsMaterial size={0.22} vertexColors transparent opacity={0.9} depthWrite={false} />
         </points>
         <Halo p={[0, 3, 0]} s={5} />
         <Sign text={'the 3D phase\n~gaussian splats · blender · three.js'} w={3} h={0.75} p={[0, 0.45, 1.25]} r={[-0.3, 0, 0]} bg="#2a2320" fg="#ffe9c7" />
@@ -730,12 +771,14 @@ function Pigeons({ t, side }: { t: number; side: number }) {
         <Hit s={1.8} p={[0, 0.3, 0]} />
         <group ref={flock}>
           {[[0, 0, 0.4], [0.5, 0.2, -0.6], [-0.45, -0.25, 2.2]].map(([x, z, r], i) => (
-            <group key={i} position={[x, 0.14, z]} rotation={[0, r, 0]}>
-              <M g="ico" c="#8e94a3" s={[0.2, 0.2, 0.34]} />
-              <M g="ico" c="#6d7fa3" s={0.14} p={[0, 0.14, 0.16]} />
-              <M g="cone" c="#f5c23e" s={[0.04, 0.08, 0.04]} p={[0, 0.13, 0.26]} r={[Math.PI / 2, 0, 0]} />
-              <M c="#7c8291" s={[0.26, 0.02, 0.18]} p={[0.14, 0.04, 0]} />
-              <M c="#7c8291" s={[0.26, 0.02, 0.18]} p={[-0.14, 0.04, 0]} />
+            <group key={i} position={[x, 0.2, z]} rotation={[0, r, 0]} scale={1.4}>
+              <M g="sph" c="#a3a9b8" s={[0.22, 0.2, 0.36]} />
+              <M g="sph" c="#6d7fa3" s={0.15} p={[0, 0.14, 0.15]} />
+              <M g="cone" c="#f5c23e" s={[0.04, 0.08, 0.04]} p={[0, 0.13, 0.25]} r={[Math.PI / 2, 0, 0]} />
+              <M g="sph" c="#868c9c" s={[0.26, 0.03, 0.2]} p={[0.11, 0.04, -0.02]} />
+              <M g="sph" c="#868c9c" s={[0.26, 0.03, 0.2]} p={[-0.11, 0.04, -0.02]} />
+              <M c="#868c9c" s={[0.12, 0.03, 0.14]} p={[0, 0.02, -0.22]} />
+              {[0.05, -0.05].map((ex) => <M key={ex} g="sph" c="#1f1a1c" s={0.03} p={[ex, 0.17, 0.21]} shadow={false} />)}
             </group>
           ))}
         </group>

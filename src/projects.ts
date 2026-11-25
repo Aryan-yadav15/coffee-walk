@@ -255,7 +255,7 @@ export const PROJECTS: Project[] = [
     tagline: 'The backend I designed and ran as CTO.',
     context: 'KhaooGully · engine room',
     about:
-      'One FastAPI backend serves the customer app, the restaurant dashboard, the rider navigator, the admin console and a partner API, on Supabase Postgres. Campus orders are pooled so a whole hostel shares one delivery.',
+      'Three FastAPI backends, one per side of an order: customer, restaurant, and driver/admin. Each owns its own Postgres database, and they talk to each other through events and webhooks. Campus orders are pooled so a whole hostel shares one delivery.',
     how: [
       'Thin routers over a services layer: pricing, payments, promos, pooling and instant dispatch, with Pydantic v2 models at every edge. 30+ route modules.',
       'A background scheduler closes or extends order pools every 60 seconds and notifies admins.',
@@ -266,7 +266,7 @@ export const PROJECTS: Project[] = [
       'Separate dev and prod databases, dated migrations tracked in a ledger, and JWT verification against Supabase keys.',
     ],
     stack: ['Python', 'FastAPI', 'PostgreSQL', 'Supabase', 'PostGIS', 'H3', 'Razorpay', 'Web Push', 'Gunicorn'],
-    highlights: ['CTO & founder', '12.3 s → 1.4 s under load', 'one backend, five apps'],
+    highlights: ['CTO & founder', '12.3 s → 1.4 s under load', 'three backends, own DB each'],
     note: 'The backend is private, so there is no code link. Happy to walk through it on a call.',
   },
   {

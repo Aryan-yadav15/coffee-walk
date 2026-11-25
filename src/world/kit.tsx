@@ -21,6 +21,8 @@ export const G = {
   sph: new THREE.SphereGeometry(0.5, 28, 18),
   dome: new THREE.SphereGeometry(0.5, 28, 12, 0, Math.PI * 2, 0, Math.PI * 0.56),
   plane: new THREE.PlaneGeometry(1, 1),
+  /** Half a disc, flat side up once turned to face +z: scallops on awnings. */
+  half: new THREE.CylinderGeometry(0.5, 0.5, 1, 20, 1, false, -Math.PI / 2, Math.PI),
 }
 
 // Boxes get bevelled edges. The bevel must not stretch with the box, so each size is its own geometry.
@@ -38,6 +40,15 @@ export function capsule(r: number, len: number) {
   const key = `${r}|${len}`
   let g = caps.get(key)
   if (!g) caps.set(key, (g = new THREE.CapsuleGeometry(r, len, 8, 20)))
+  return g
+}
+
+const tori = new Map<string, THREE.BufferGeometry>()
+/** Ring of radius `r` and thickness `tube`, in the XY plane. `arc` < 2π gives a partial ring. */
+export function torus(r: number, tube: number, arc = Math.PI * 2) {
+  const key = `${r}|${tube}|${arc}`
+  let g = tori.get(key)
+  if (!g) tori.set(key, (g = new THREE.TorusGeometry(r, tube, 10, 32, arc)))
   return g
 }
 
@@ -102,7 +113,28 @@ export function M({ g = 'box', geo, c = '#ffffff', m, p, s, r, shadow = true, ..
   )
 }
 
-type SignProps = SignOpts & { text: string; p?: V3; r?: V3; lit?: number; back?: string | false }
+const UP = new THREE.Vector3(0, 1, 0)
+
+/** A round bar from `a` to `b`, for frames, poles and tubes. */
+export function Rod({ a, b, r = 0.04, c = '#2a2320', m }: { a: V3; b: V3; r?: number; c?: string; m?: THREE.Material }) {
+  const { p, q, len } = useMemo(() => {
+    const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b)
+    const d = vb.clone().sub(va)
+    return { p: va.add(vb).multiplyScalar(0.5).toArray() as V3, q: new THREE.Quaternion().setFromUnitVectors(UP, d.clone().normalize()), len: d.length() }
+  }, [a, b])
+  return <mesh geometry={G.cyl} material={m ?? mat(c)} position={p} quaternion={q} scale={[r * 2, len, r * 2]} castShadow receiveShadow />
+}
+
+const shades = new Map<string, string>()
+/** `c` made lighter (positive `l`) or darker (negative), in HSL lightness. */
+export function shade(c: string, l: number) {
+  const key = `${c}|${l}`
+  let s = shades.get(key)
+  if (!s) shades.set(key, (s = '#' + new THREE.Color(c).offsetHSL(0, 0, l).getHexString()))
+  return s
+}
+
+type SignProps =SignOpts & { text: string; p?: V3; r?: V3; lit?: number; back?: string | false }
 
 export function Sign({ text, w, h, bg, fg, hand, p, r, lit = 0.3, back = '#5a4636' }: SignProps) {
   const material = useMemo(() => {

@@ -15,6 +15,7 @@ export const live = {
   moving: 0, // 0 standing still, 1 walking
   cx: 0, // what the camera is looking at
   cz: 0,
+  jumping: 0, // until when (ms) a scroll is ours, from a button, not the visitor's
 }
 
 export const EGGS = {
@@ -30,6 +31,7 @@ export const EGGS = {
   tv: 'channel surfer',
   six: 'hit a six',
   claw: 'claw machine champ',
+  speedrun: 'speedrunner',
 }
 export type EggId = keyof typeof EGGS
 export const EGG_TOTAL = Object.keys(EGGS).length
@@ -50,9 +52,11 @@ type State = {
   claw: boolean
   /** Index of the plush just won, while its card is showing. */
   prize: number | null
+  /** Engine-room kitchen open in the inspect drawer. */
+  inspect: number | null
 }
 
-let state: State = { eggs: [], toast: null, meme: null, chai: false, sound: false, sips: 0, plain: false, tv: null, seen: [], claw: false, prize: null }
+let state: State = { eggs: [], toast: null, meme: null, chai: false, sound: false, sips: 0, plain: false, tv: null, seen: [], claw: false, prize: null, inspect: null }
 const subs = new Set<() => void>()
 const subscribe = (f: () => void) => (subs.add(f), () => subs.delete(f))
 
@@ -101,6 +105,7 @@ export function chaiMode() {
 }
 
 export function jumpTo(t: number) {
+  live.jumping = performance.now() + 2500
   const max = document.documentElement.scrollHeight - window.innerHeight
   window.scrollTo({ top: (dist(t) / TOTAL) * max, behavior: 'smooth' })
 }

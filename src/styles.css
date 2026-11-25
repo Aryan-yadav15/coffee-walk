@@ -197,7 +197,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   animation: slap 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
 @keyframes slap { from { opacity: 0; transform: rotate(12deg) scale(1.5); } }
-.meme img, .meme-art { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3px; }
+.meme img, .meme video, .meme-art { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3px; }
 .meme-art { display: grid; place-items: center; position: relative; background: linear-gradient(160deg, #cfe9f5, #f5e58a); }
 .meme-emoji { font-size: 96px; line-height: 1; }
 .meme-top { position: absolute; top: 8px; left: 0; right: 0; text-align: center; font: 800 20px/1 Impact, 'Bricolage Grotesque', sans-serif; text-transform: uppercase; color: #fff; -webkit-text-stroke: 1.5px #000; paint-order: stroke fill; }
@@ -679,3 +679,36 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 /* no tilt-shift blur while playing: the machine is the whole view */
 .claw-on .tilt::before, .claw-on .tilt::after { display: none; }
+
+/* ---------- engine room: the inspect drawer ---------- */
+.inspect {
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 100vw); z-index: 8; box-sizing: border-box;
+  padding: max(20px, env(safe-area-inset-top)) 22px 28px; overflow-y: auto; overscroll-behavior: contain;
+  background: #121419; color: #e8f1ff; font: 400 13px/1.6 var(--mono);
+  border-left: 1px solid rgba(232, 241, 255, 0.2); box-shadow: -20px 0 60px rgba(0, 0, 0, 0.35);
+  transform: translateX(105%); transition: transform 420ms cubic-bezier(.2, .8, .2, 1); pointer-events: none;
+}
+.inspect.on { transform: none; pointer-events: auto; }
+.inspect-top { display: flex; align-items: center; gap: 10px; }
+.inspect-top i { width: 9px; height: 9px; border-radius: 9px; background: #7dffb0; box-shadow: 0 0 8px #7dffb0; flex: none; }
+.inspect-top button, .inspect-links button {
+  background: none; border: 1px solid rgba(232, 241, 255, 0.3); color: #e8f1ff; font: 500 12px var(--mono);
+  padding: 4px 9px; border-radius: 4px; cursor: pointer;
+}
+.inspect-top button { margin-left: auto; }
+.inspect-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.inspect-links button { color: #ffb547; border-color: rgba(255, 181, 71, 0.45); }
+.inspect h2 { font: 700 22px var(--mono); letter-spacing: -0.02em; margin: 18px 0 2px; }
+.inspect h3 { font: 400 13px var(--mono); color: #7f8aa3; margin: 18px 0 6px; }
+.inspect p { margin: 0 0 4px; }
+.inspect .plus { display: flex; gap: 8px; }
+.inspect .plus b { color: #7dffb0; font-weight: 400; }
+.inspect .dim { color: #7f8aa3; }
+.inspect .dim2 { color: #b9c3d6; }
+.inspect .amber { color: #ffb547; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inspect pre {
+  margin: 0; padding: 12px 14px; background: #0b0c10; border: 1px solid rgba(232, 241, 255, 0.14); border-radius: 6px;
+  color: #ffb547; font: 400 12px/1.55 var(--mono); white-space: pre; overflow-x: auto;
+}
+.inspect pre.blue { color: #9fd8ff; }

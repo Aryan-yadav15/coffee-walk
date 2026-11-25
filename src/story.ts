@@ -16,7 +16,7 @@ export type Beat = {
   meme?: MemeId
   stat?: Stat
 }
-export type MemeId = 'wetcat' | 'iguess'
+export type MemeId = 'wetcat' | 'iguess' | 'toofast'
 
 export const ME = {
   name: 'Aryan Yadav',
@@ -167,12 +167,12 @@ export const BEATS: Beat[] = [
     stat: { big: 'CTO', small: 'founder · KhaooGully' },
   },
   {
-    from: eu(ROOM_U - 7), to: eu(ROOM_U - 1.2), kicker: 'engine room · 1 · wire it',
-    text: 'Every order goes app → API → pool → restaurant, with Postgres underneath. Tap the glowing part to plug in the next wire.',
+    from: eu(ROOM_U - 7), to: eu(ROOM_U - 1.2), kicker: 'engine room · 1 · three kitchens',
+    text: 'Three backends: customer, restaurant, and driver/admin. Each owns its own database, and they talk through events. Tap a kitchen to open it up.',
   },
   {
     from: eu(ROOM_U - 1), to: eu(ROOM_U + 4.8), kicker: 'engine room · 2 · lunch rush',
-    text: 'Then 1 PM hits. Our API choked: database calls were blocking the event loop. I moved them off it, and 20 concurrent requests went from 12.3 s to 1.4 s.',
+    text: 'Then 1 PM hits. The customer backend choked: database calls were blocking the event loop. I moved them off it, and 20 concurrent requests went from 12.3 s to 1.4 s.',
     stat: { big: '12.3s → 1.4s', small: '20 concurrent requests' },
   },
   {
@@ -232,7 +232,8 @@ export const BEATS: Beat[] = [
 ]
 
 export const MEMES: Record<MemeId, { file: string; emoji: string; top: string; bottom: string }> = {
-  // Drop the real images in public/memes/ with these file names. Until then a drawn stand-in shows.
-  wetcat: { file: 'wet-cat.jpg', emoji: '😿', top: 'demo: breaks', bottom: 'bruh' },
-  iguess: { file: 'i-guess-bro.jpg', emoji: '🤷', top: '', bottom: 'i guess bro' },
+  // Files live in public/memes/. An .mp4 plays as a silent loop; if a file is missing, a drawn stand-in shows.
+  wetcat: { file: 'wet-cat.mp4', emoji: '😿', top: 'demo: breaks', bottom: 'bruh' },
+  iguess: { file: 'i-guess-bro.mp4', emoji: '🤷', top: '', bottom: 'i guess bro' },
+  toofast: { file: 'too-fast.jpg', emoji: '🏎️', top: 'speedrun any%', bottom: 'are you even reading atp' },
 }
